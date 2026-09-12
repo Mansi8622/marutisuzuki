@@ -1,0 +1,63 @@
+@extends('layouts.frontend')
+@section('content')
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-12">
+
+            <div class="card">
+                <div class="card-header">
+                    {{ trans('global.edit') }} {{ trans('cruds.tax.title_singular') }}
+                </div>
+
+                <div class="card-body">
+                    <form method="POST" action="{{ route("frontend.taxes.update", [$tax->id]) }}" enctype="multipart/form-data">
+                        @method('PUT')
+                        @csrf
+                        <div class="form-group">
+                            <label class="required" for="name">{{ trans('cruds.tax.fields.name') }}</label>
+                            <input class="form-control" type="text" name="name" id="name" value="{{ old('name', $tax->name) }}" required>
+                            @if($errors->has('name'))
+                                <div class="invalid-feedback">
+                                    {{ $errors->first('name') }}
+                                </div>
+                            @endif
+                            <span class="help-block">{{ trans('cruds.tax.fields.name_helper') }}</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="required" for="tax_rate">{{ trans('cruds.tax.fields.tax_rate') }}</label>
+                            <input class="form-control" type="text" name="tax_rate" id="tax_rate" value="{{ old('tax_rate', $tax->tax_rate) }}" required>
+                            @if($errors->has('tax_rate'))
+                                <div class="invalid-feedback">
+                                    {{ $errors->first('tax_rate') }}
+                                </div>
+                            @endif
+                            <span class="help-block">{{ trans('cruds.tax.fields.tax_rate_helper') }}</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="required">{{ trans('cruds.tax.fields.status') }}</label>
+                            <select class="form-control" name="status" id="status" required>
+                                <option value disabled {{ old('status', null) === null ? 'selected' : '' }}>{{ trans('global.pleaseSelect') }}</option>
+                                @foreach(App\Models\Tax::STATUS_SELECT as $key => $label)
+                                    <option value="{{ $key }}" {{ old('status', $tax->status) === (string) $key ? 'selected' : '' }}>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                            @if($errors->has('status'))
+                                <div class="invalid-feedback">
+                                    {{ $errors->first('status') }}
+                                </div>
+                            @endif
+                            <span class="help-block">{{ trans('cruds.tax.fields.status_helper') }}</span>
+                        </div>
+                        <div class="form-group">
+                            <button class="btn btn-danger" type="submit">
+                                {{ trans('global.save') }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+@endsection

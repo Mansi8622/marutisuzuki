@@ -1,0 +1,506 @@
+@extends('layouts.frontend')
+@section('content')
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-12">
+
+            <div class="card">
+                <div class="card-header">
+                    {{ trans('global.create') }} {{ trans('cruds.user.title_singular') }}
+                </div>
+
+                <div class="card-body">
+                    <form method="POST" action="{{ route("frontend.users.store") }}" enctype="multipart/form-data">
+                        @method('POST')
+                        @csrf
+                        <div class="form-group">
+                            <label class="required" for="name">{{ trans('cruds.user.fields.name') }}</label>
+                            <input class="form-control" type="text" name="name" id="name" value="{{ old('name', '') }}" required>
+                            @if($errors->has('name'))
+                                <div class="invalid-feedback">
+                                    {{ $errors->first('name') }}
+                                </div>
+                            @endif
+                            <span class="help-block">{{ trans('cruds.user.fields.name_helper') }}</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="required" for="email">{{ trans('cruds.user.fields.email') }}</label>
+                            <input class="form-control" type="email" name="email" id="email" value="{{ old('email') }}" required>
+                            @if($errors->has('email'))
+                                <div class="invalid-feedback">
+                                    {{ $errors->first('email') }}
+                                </div>
+                            @endif
+                            <span class="help-block">{{ trans('cruds.user.fields.email_helper') }}</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="required" for="phone">{{ trans('cruds.user.fields.phone') }}</label>
+                            <input class="form-control" type="text" name="phone" id="phone" value="{{ old('phone', '') }}" required>
+                            @if($errors->has('phone'))
+                                <div class="invalid-feedback">
+                                    {{ $errors->first('phone') }}
+                                </div>
+                            @endif
+                            <span class="help-block">{{ trans('cruds.user.fields.phone_helper') }}</span>
+                        </div>
+                        <div class="form-group">
+                            <div>
+                                <input type="hidden" name="approved" value="0">
+                                <input type="checkbox" name="approved" id="approved" value="1" {{ old('approved', 0) == 1 ? 'checked' : '' }}>
+                                <label for="approved">{{ trans('cruds.user.fields.approved') }}</label>
+                            </div>
+                            @if($errors->has('approved'))
+                                <div class="invalid-feedback">
+                                    {{ $errors->first('approved') }}
+                                </div>
+                            @endif
+                            <span class="help-block">{{ trans('cruds.user.fields.approved_helper') }}</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="required" for="business_name">{{ trans('cruds.user.fields.business_name') }}</label>
+                            <input class="form-control" type="text" name="business_name" id="business_name" value="{{ old('business_name', '') }}" required>
+                            @if($errors->has('business_name'))
+                                <div class="invalid-feedback">
+                                    {{ $errors->first('business_name') }}
+                                </div>
+                            @endif
+                            <span class="help-block">{{ trans('cruds.user.fields.business_name_helper') }}</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="required">{{ trans('cruds.user.fields.business_type') }}</label>
+                            <select class="form-control" name="business_type" id="business_type" required>
+                                <option value disabled {{ old('business_type', null) === null ? 'selected' : '' }}>{{ trans('global.pleaseSelect') }}</option>
+                                @foreach(App\Models\User::BUSINESS_TYPE_SELECT as $key => $label)
+                                    <option value="{{ $key }}" {{ old('business_type', 'Select Business Type') === (string) $key ? 'selected' : '' }}>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                            @if($errors->has('business_type'))
+                                <div class="invalid-feedback">
+                                    {{ $errors->first('business_type') }}
+                                </div>
+                            @endif
+                            <span class="help-block">{{ trans('cruds.user.fields.business_type_helper') }}</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="gst_number">{{ trans('cruds.user.fields.gst_number') }}</label>
+                            <input class="form-control" type="text" name="gst_number" id="gst_number" value="{{ old('gst_number', '') }}">
+                            @if($errors->has('gst_number'))
+                                <div class="invalid-feedback">
+                                    {{ $errors->first('gst_number') }}
+                                </div>
+                            @endif
+                            <span class="help-block">{{ trans('cruds.user.fields.gst_number_helper') }}</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="pan_number">{{ trans('cruds.user.fields.pan_number') }}</label>
+                            <input class="form-control" type="text" name="pan_number" id="pan_number" value="{{ old('pan_number', '') }}">
+                            @if($errors->has('pan_number'))
+                                <div class="invalid-feedback">
+                                    {{ $errors->first('pan_number') }}
+                                </div>
+                            @endif
+                            <span class="help-block">{{ trans('cruds.user.fields.pan_number_helper') }}</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="business_address">{{ trans('cruds.user.fields.business_address') }}</label>
+                            <textarea class="form-control ckeditor" name="business_address" id="business_address">{!! old('business_address') !!}</textarea>
+                            @if($errors->has('business_address'))
+                                <div class="invalid-feedback">
+                                    {{ $errors->first('business_address') }}
+                                </div>
+                            @endif
+                            <span class="help-block">{{ trans('cruds.user.fields.business_address_helper') }}</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="bank_name">{{ trans('cruds.user.fields.bank_name') }}</label>
+                            <input class="form-control" type="text" name="bank_name" id="bank_name" value="{{ old('bank_name', '') }}">
+                            @if($errors->has('bank_name'))
+                                <div class="invalid-feedback">
+                                    {{ $errors->first('bank_name') }}
+                                </div>
+                            @endif
+                            <span class="help-block">{{ trans('cruds.user.fields.bank_name_helper') }}</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="account_number">{{ trans('cruds.user.fields.account_number') }}</label>
+                            <input class="form-control" type="text" name="account_number" id="account_number" value="{{ old('account_number', '') }}">
+                            @if($errors->has('account_number'))
+                                <div class="invalid-feedback">
+                                    {{ $errors->first('account_number') }}
+                                </div>
+                            @endif
+                            <span class="help-block">{{ trans('cruds.user.fields.account_number_helper') }}</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="ifsc_code">{{ trans('cruds.user.fields.ifsc_code') }}</label>
+                            <input class="form-control" type="text" name="ifsc_code" id="ifsc_code" value="{{ old('ifsc_code', '') }}">
+                            @if($errors->has('ifsc_code'))
+                                <div class="invalid-feedback">
+                                    {{ $errors->first('ifsc_code') }}
+                                </div>
+                            @endif
+                            <span class="help-block">{{ trans('cruds.user.fields.ifsc_code_helper') }}</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="account_holder_name">{{ trans('cruds.user.fields.account_holder_name') }}</label>
+                            <input class="form-control" type="text" name="account_holder_name" id="account_holder_name" value="{{ old('account_holder_name', '') }}">
+                            @if($errors->has('account_holder_name'))
+                                <div class="invalid-feedback">
+                                    {{ $errors->first('account_holder_name') }}
+                                </div>
+                            @endif
+                            <span class="help-block">{{ trans('cruds.user.fields.account_holder_name_helper') }}</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="kyc_documents_front">{{ trans('cruds.user.fields.kyc_documents_front') }}</label>
+                            <div class="needsclick dropzone" id="kyc_documents_front-dropzone">
+                            </div>
+                            @if($errors->has('kyc_documents_front'))
+                                <div class="invalid-feedback">
+                                    {{ $errors->first('kyc_documents_front') }}
+                                </div>
+                            @endif
+                            <span class="help-block">{{ trans('cruds.user.fields.kyc_documents_front_helper') }}</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="kyc_documents_back">{{ trans('cruds.user.fields.kyc_documents_back') }}</label>
+                            <div class="needsclick dropzone" id="kyc_documents_back-dropzone">
+                            </div>
+                            @if($errors->has('kyc_documents_back'))
+                                <div class="invalid-feedback">
+                                    {{ $errors->first('kyc_documents_back') }}
+                                </div>
+                            @endif
+                            <span class="help-block">{{ trans('cruds.user.fields.kyc_documents_back_helper') }}</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="business_registration_certificate">{{ trans('cruds.user.fields.business_registration_certificate') }}</label>
+                            <div class="needsclick dropzone" id="business_registration_certificate-dropzone">
+                            </div>
+                            @if($errors->has('business_registration_certificate'))
+                                <div class="invalid-feedback">
+                                    {{ $errors->first('business_registration_certificate') }}
+                                </div>
+                            @endif
+                            <span class="help-block">{{ trans('cruds.user.fields.business_registration_certificate_helper') }}</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="license_details">{{ trans('cruds.user.fields.license_details') }}</label>
+                            <input class="form-control" type="text" name="license_details" id="license_details" value="{{ old('license_details', '') }}">
+                            @if($errors->has('license_details'))
+                                <div class="invalid-feedback">
+                                    {{ $errors->first('license_details') }}
+                                </div>
+                            @endif
+                            <span class="help-block">{{ trans('cruds.user.fields.license_details_helper') }}</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="required">{{ trans('cruds.user.fields.status') }}</label>
+                            <select class="form-control" name="status" id="status" required>
+                                <option value disabled {{ old('status', null) === null ? 'selected' : '' }}>{{ trans('global.pleaseSelect') }}</option>
+                                @foreach(App\Models\User::STATUS_SELECT as $key => $label)
+                                    <option value="{{ $key }}" {{ old('status', 'Select Status') === (string) $key ? 'selected' : '' }}>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                            @if($errors->has('status'))
+                                <div class="invalid-feedback">
+                                    {{ $errors->first('status') }}
+                                </div>
+                            @endif
+                            <span class="help-block">{{ trans('cruds.user.fields.status_helper') }}</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="required" for="vendor">{{ trans('cruds.user.fields.vendor') }}</label>
+                            <input class="form-control" type="text" name="vendor" id="vendor" value="{{ old('vendor', '') }}" required>
+                            @if($errors->has('vendor'))
+                                <div class="invalid-feedback">
+                                    {{ $errors->first('vendor') }}
+                                </div>
+                            @endif
+                            <span class="help-block">{{ trans('cruds.user.fields.vendor_helper') }}</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="required" for="roles">{{ trans('cruds.user.fields.roles') }}</label>
+                            <div style="padding-bottom: 4px">
+                                <span class="btn btn-info btn-xs select-all" style="border-radius: 0">{{ trans('global.select_all') }}</span>
+                                <span class="btn btn-info btn-xs deselect-all" style="border-radius: 0">{{ trans('global.deselect_all') }}</span>
+                            </div>
+                            <select class="form-control select2" name="roles[]" id="roles" multiple required>
+                                @foreach($roles as $id => $role)
+                                    <option value="{{ $id }}" {{ in_array($id, old('roles', [])) ? 'selected' : '' }}>{{ $role }}</option>
+                                @endforeach
+                            </select>
+                            @if($errors->has('roles'))
+                                <div class="invalid-feedback">
+                                    {{ $errors->first('roles') }}
+                                </div>
+                            @endif
+                            <span class="help-block">{{ trans('cruds.user.fields.roles_helper') }}</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="required" for="password">{{ trans('cruds.user.fields.password') }}</label>
+                            <input class="form-control" type="password" name="password" id="password" required>
+                            @if($errors->has('password'))
+                                <div class="invalid-feedback">
+                                    {{ $errors->first('password') }}
+                                </div>
+                            @endif
+                            <span class="help-block">{{ trans('cruds.user.fields.password_helper') }}</span>
+                        </div>
+                        <div class="form-group">
+                            <button class="btn btn-danger" type="submit">
+                                {{ trans('global.save') }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+@endsection
+
+@section('scripts')
+<script>
+    $(document).ready(function () {
+  function SimpleUploadAdapter(editor) {
+    editor.plugins.get('FileRepository').createUploadAdapter = function(loader) {
+      return {
+        upload: function() {
+          return loader.file
+            .then(function (file) {
+              return new Promise(function(resolve, reject) {
+                // Init request
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', '{{ route('frontend.users.storeCKEditorImages') }}', true);
+                xhr.setRequestHeader('x-csrf-token', window._token);
+                xhr.setRequestHeader('Accept', 'application/json');
+                xhr.responseType = 'json';
+
+                // Init listeners
+                var genericErrorText = `Couldn't upload file: ${ file.name }.`;
+                xhr.addEventListener('error', function() { reject(genericErrorText) });
+                xhr.addEventListener('abort', function() { reject() });
+                xhr.addEventListener('load', function() {
+                  var response = xhr.response;
+
+                  if (!response || xhr.status !== 201) {
+                    return reject(response && response.message ? `${genericErrorText}\n${xhr.status} ${response.message}` : `${genericErrorText}\n ${xhr.status} ${xhr.statusText}`);
+                  }
+
+                  $('form').append('<input type="hidden" name="ck-media[]" value="' + response.id + '">');
+
+                  resolve({ default: response.url });
+                });
+
+                if (xhr.upload) {
+                  xhr.upload.addEventListener('progress', function(e) {
+                    if (e.lengthComputable) {
+                      loader.uploadTotal = e.total;
+                      loader.uploaded = e.loaded;
+                    }
+                  });
+                }
+
+                // Send request
+                var data = new FormData();
+                data.append('upload', file);
+                data.append('crud_id', '{{ $user->id ?? 0 }}');
+                xhr.send(data);
+              });
+            })
+        }
+      };
+    }
+  }
+
+  var allEditors = document.querySelectorAll('.ckeditor');
+  for (var i = 0; i < allEditors.length; ++i) {
+    ClassicEditor.create(
+      allEditors[i], {
+        extraPlugins: [SimpleUploadAdapter]
+      }
+    );
+  }
+});
+</script>
+
+<script>
+    var uploadedKycDocumentsFrontMap = {}
+Dropzone.options.kycDocumentsFrontDropzone = {
+    url: '{{ route('frontend.users.storeMedia') }}',
+    maxFilesize: 20, // MB
+    acceptedFiles: '.jpeg,.jpg,.png,.gif',
+    addRemoveLinks: true,
+    headers: {
+      'X-CSRF-TOKEN': "{{ csrf_token() }}"
+    },
+    params: {
+      size: 20,
+      width: 4096,
+      height: 4096
+    },
+    success: function (file, response) {
+      $('form').append('<input type="hidden" name="kyc_documents_front[]" value="' + response.name + '">')
+      uploadedKycDocumentsFrontMap[file.name] = response.name
+    },
+    removedfile: function (file) {
+      console.log(file)
+      file.previewElement.remove()
+      var name = ''
+      if (typeof file.file_name !== 'undefined') {
+        name = file.file_name
+      } else {
+        name = uploadedKycDocumentsFrontMap[file.name]
+      }
+      $('form').find('input[name="kyc_documents_front[]"][value="' + name + '"]').remove()
+    },
+    init: function () {
+@if(isset($user) && $user->kyc_documents_front)
+      var files = {!! json_encode($user->kyc_documents_front) !!}
+          for (var i in files) {
+          var file = files[i]
+          this.options.addedfile.call(this, file)
+          this.options.thumbnail.call(this, file, file.preview ?? file.preview_url)
+          file.previewElement.classList.add('dz-complete')
+          $('form').append('<input type="hidden" name="kyc_documents_front[]" value="' + file.file_name + '">')
+        }
+@endif
+    },
+     error: function (file, response) {
+         if ($.type(response) === 'string') {
+             var message = response //dropzone sends it's own error messages in string
+         } else {
+             var message = response.errors.file
+         }
+         file.previewElement.classList.add('dz-error')
+         _ref = file.previewElement.querySelectorAll('[data-dz-errormessage]')
+         _results = []
+         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+             node = _ref[_i]
+             _results.push(node.textContent = message)
+         }
+
+         return _results
+     }
+}
+
+</script>
+<script>
+    Dropzone.options.kycDocumentsBackDropzone = {
+    url: '{{ route('frontend.users.storeMedia') }}',
+    maxFilesize: 20, // MB
+    acceptedFiles: '.jpeg,.jpg,.png,.gif',
+    maxFiles: 1,
+    addRemoveLinks: true,
+    headers: {
+      'X-CSRF-TOKEN': "{{ csrf_token() }}"
+    },
+    params: {
+      size: 20,
+      width: 4096,
+      height: 4096
+    },
+    success: function (file, response) {
+      $('form').find('input[name="kyc_documents_back"]').remove()
+      $('form').append('<input type="hidden" name="kyc_documents_back" value="' + response.name + '">')
+    },
+    removedfile: function (file) {
+      file.previewElement.remove()
+      if (file.status !== 'error') {
+        $('form').find('input[name="kyc_documents_back"]').remove()
+        this.options.maxFiles = this.options.maxFiles + 1
+      }
+    },
+    init: function () {
+@if(isset($user) && $user->kyc_documents_back)
+      var file = {!! json_encode($user->kyc_documents_back) !!}
+          this.options.addedfile.call(this, file)
+      this.options.thumbnail.call(this, file, file.preview ?? file.preview_url)
+      file.previewElement.classList.add('dz-complete')
+      $('form').append('<input type="hidden" name="kyc_documents_back" value="' + file.file_name + '">')
+      this.options.maxFiles = this.options.maxFiles - 1
+@endif
+    },
+    error: function (file, response) {
+        if ($.type(response) === 'string') {
+            var message = response //dropzone sends it's own error messages in string
+        } else {
+            var message = response.errors.file
+        }
+        file.previewElement.classList.add('dz-error')
+        _ref = file.previewElement.querySelectorAll('[data-dz-errormessage]')
+        _results = []
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            node = _ref[_i]
+            _results.push(node.textContent = message)
+        }
+
+        return _results
+    }
+}
+
+</script>
+<script>
+    var uploadedBusinessRegistrationCertificateMap = {}
+Dropzone.options.businessRegistrationCertificateDropzone = {
+    url: '{{ route('frontend.users.storeMedia') }}',
+    maxFilesize: 20, // MB
+    acceptedFiles: '.jpeg,.jpg,.png,.gif',
+    addRemoveLinks: true,
+    headers: {
+      'X-CSRF-TOKEN': "{{ csrf_token() }}"
+    },
+    params: {
+      size: 20,
+      width: 4096,
+      height: 4096
+    },
+    success: function (file, response) {
+      $('form').append('<input type="hidden" name="business_registration_certificate[]" value="' + response.name + '">')
+      uploadedBusinessRegistrationCertificateMap[file.name] = response.name
+    },
+    removedfile: function (file) {
+      console.log(file)
+      file.previewElement.remove()
+      var name = ''
+      if (typeof file.file_name !== 'undefined') {
+        name = file.file_name
+      } else {
+        name = uploadedBusinessRegistrationCertificateMap[file.name]
+      }
+      $('form').find('input[name="business_registration_certificate[]"][value="' + name + '"]').remove()
+    },
+    init: function () {
+@if(isset($user) && $user->business_registration_certificate)
+      var files = {!! json_encode($user->business_registration_certificate) !!}
+          for (var i in files) {
+          var file = files[i]
+          this.options.addedfile.call(this, file)
+          this.options.thumbnail.call(this, file, file.preview ?? file.preview_url)
+          file.previewElement.classList.add('dz-complete')
+          $('form').append('<input type="hidden" name="business_registration_certificate[]" value="' + file.file_name + '">')
+        }
+@endif
+    },
+     error: function (file, response) {
+         if ($.type(response) === 'string') {
+             var message = response //dropzone sends it's own error messages in string
+         } else {
+             var message = response.errors.file
+         }
+         file.previewElement.classList.add('dz-error')
+         _ref = file.previewElement.querySelectorAll('[data-dz-errormessage]')
+         _results = []
+         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+             node = _ref[_i]
+             _results.push(node.textContent = message)
+         }
+
+         return _results
+     }
+}
+
+</script>
+@endsection

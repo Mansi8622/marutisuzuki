@@ -1,0 +1,669 @@
+body{
+   font-family: 'Times New Roman', Times, serif;
+    background-color: #F5F5F5;
+}
+
+/* Initial state */
+.card {
+  transition: 0.3s;
+  border:1px solid #97dff7;
+  background: none;
+}
+
+
+
+
+
+.primary{
+    color: #50c7ee;
+}
+
+.primary-bg{
+    background-color: #50c7ee;
+}
+.decoration{
+    text-decoration: none;
+}
+
+header .top-bar {
+    color: #878787;
+   
+  }
+  
+ header .navbar .nav-link {
+    color: #fff !important;
+    font-weight: 500;
+  }
+ 
+  header .icon-link {
+    color: #000;
+    margin-left: 10px;
+    text-decoration: none;
+    padding: 0px 20px;
+    font-weight: 600;
+  }
+
+  @media(max-width: 768px){
+    header .icon-link span{
+      display: none;
+    }
+    header .icon-link {
+      font-size: 16px;
+      padding: 0px 10px;
+    }
+    header .header-search{
+      display: none;
+    }
+
+  }
+  
+  header .icon-link i{
+    font-size: 20px;
+    vertical-align: 0;
+  }
+  header .header-search{
+    min-width: 450px;
+  }
+  .header3{
+    background-color: #50c7ee;
+    color: #fff;
+  }
+  @media(max-width: 992px){
+    header .header3{
+display: none;   
+ }
+  }
+
+  header .header3 li{
+    padding: 0px 40px;
+  }
+  header .header3 li a{
+    color: #fff;
+    text-decoration: none;
+  }
+
+  /* crosel */
+
+ .carousel-caption{
+  width: 30%;
+ }
+  .carousel-caption h1{
+    color: #fff;
+   padding-bottom: 50px;
+    
+  }
+  .carousel-caption button{
+    background-color: #EE1D26;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+  }
+  .section-2 .card{
+    border: none;
+    border-radius: 10px;
+    background: none;
+    border : 1px solid #97dff7;
+
+  }
+
+  .section-2 .best 
+  {
+    background-color:#97dff765 !important;
+    color: #111010 !important;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px 0px 10px 0px;
+    text-transform: capitalize;
+    
+
+  }
+  .section-2 .card del{
+    color: #C4C4D6;
+    font-weight: normal;
+    padding-left: 10px;
+  }
+
+  .section-2 .card .btn{
+    background-color:#50c7ee;
+    color: rgb(1, 1, 1) ;
+  }
+
+  .section-2 .card del{
+    color: #e50000;
+    font-weight: 900;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    padding-left: 10px;
+  }
+  .section-2 .card p{
+    color: #828282;
+    font-weight:600;
+    font-size: 18px;
+  }
+
+  .section-3 button{
+    background-color: #EE1D26;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+  }
+
+  
+
+  .section-4 h1{
+    color: #431D04;
+    font-weight: 500;
+  }
+
+  .section-4 .card del{
+    color: #e50000;
+    font-weight: 900;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    padding-left: 10px;
+  }
+  .section-4 .card p{
+    color: #828282;
+    font-weight:600;
+    font-size: 18px;
+  }
+
+  .section-4 strong{
+    color: #EE1D26;
+  }
+
+  .section-6 .card{
+    padding-top: 10px;
+    padding-bottom: 30px;
+    border: 1px solid #FFF0E5;
+  }
+  .section-6  h5{
+    color: #431D04;
+  }
+  .section-6 .card del{
+    color: #e50000;
+    font-weight: 900;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    padding-left: 10px;
+  }
+  .section-6 .card p{
+    color: #828282;
+    font-weight:600;
+    font-size: 18px;
+  }
+  
+ footer{
+    background:#50c6ee25;
+  }
+  footer h1{
+    border-bottom: 4px solid #50c7ee;
+    font-size: 24px;
+    padding-bottom: 10px;
+    font-weight: 600;
+  }
+
+  @media(max-width: 992px){
+    footer h1{
+      font-size: 18px;
+      border: none;
+    }
+  }
+
+  footer ul li{
+    list-style: none;
+    padding-bottom: 20px;
+  }
+  footer ul li i{
+    color: #50c7ee;
+    padding-right: 10px;
+  }
+  footer .detail p
+  {
+    display: flex;
+  }
+
+  footer .detail i{
+    width: 40px;
+    height: 40px;
+    border-radius: 100%;
+    background-color: #50c7ee;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-right: 20px;
+    
+
+  }
+
+  .product-detail .zoom{
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .product-detail .zoom img{
+    width: 100%;
+    overflow: hidden;
+
+  }
+  .product-detail img:hover{
+    transform: scale(1.3);
+    transition: 2s;
+  }
+
+
+  .product-detail .card{
+    border: none;
+    border: 1px solid #50c7ee;
+
+  }
+  
+  .product-detail .card h3{
+    font-weight: 600;
+  }
+
+  .product-detail p{
+    color: #828282;
+  }
+  
+  .product-detail del{
+    color: #e50000;
+    font-weight: 900;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    padding-left: 10px;
+  }
+  .product-detail .box  .card {
+    margin: 20px;
+    min-width: 150px;
+  }
+
+  @media(max-width: 992px){
+    .product-detail .box  .card {
+      margin: 5px;
+      min-width: 0;
+
+    }
+    .product-detail .box.card h4{
+      font-size: 14px;
+    }
+
+    .product-detail .box.card p{
+      font-size: 12px;
+    }
+  }
+
+  .product-detail .box h4{
+    border-bottom: 1px solid #FFCDAD;
+    padding: 10px;
+
+
+  }
+
+
+
+  .product-detail .box p{
+    padding: 5px;
+  }
+  .product-detail button{
+    background-color: #50c7ee;
+    color: #fff;
+  }
+
+  .product-detail button:hover{
+    background-color: white;
+    color: black;
+  }
+
+
+
+  
+  /* login css  */
+  .login{
+    background-color: #FFCDAD;
+     padding: 50px;
+ }
+
+
+
+ .login .login-form{
+   background-color: #fff;
+   padding: 50px;
+   border-radius: 10px;
+ }
+
+
+
+  .login .login-form h2{
+    color: #EE1D26;
+
+    font-weight: 600;
+    text-align: center;
+
+  }
+
+  .login .login-form p{
+    color: #828282;
+    text-align: center;
+  }
+
+  .login .login-form input{
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #C4C4D6;
+    border-radius: 5px;
+  }
+
+  .login .login-form input:focus{
+    outline: none;
+    box-shadow: none;
+  }
+  .login label{
+    color: black;
+    font-weight: 600;
+    padding-bottom: 5px;
+  }
+
+  .login .login-form button:hover{
+    background-color: #EE1D26;
+    color: #fff;
+  }
+
+  @media(max-width: 992px){
+    .login{
+      padding: 10px;
+  
+    }
+    .login .login-form{
+      background-color: #fff;
+      padding: 15px;
+      border-radius: 10px;
+    }
+
+    .login label{
+     font-size: 14px;
+    }
+   }
+
+    /* dashboard css */
+    .dashboard-menu{
+      padding: 20px;
+    }
+
+    .dashboard .profile img{
+      width: 60px;
+      height: 60px;
+      border-radius: 100%;
+
+
+    }
+
+    .dashboard .profile p{
+      color: #828282;
+    }
+
+    .dashboard ul li{
+      list-style: none;
+      padding: 10px 0px;
+      border: 1px solid #D7D7D7;
+      color: black;
+      margin-bottom: 10px;
+      padding-left: 20px;
+    }
+
+    .dashboard .active{
+      background-color: #FFCDAD;
+      border: 1px solid #E82600;
+    }
+
+    .dashboard ul li a{
+      color: black;
+      font-weight: 500;
+    }
+
+    .dashboard .btn:hover{
+      background-color: #50c7ee;
+      color: #fff;
+    }
+
+    .dashboard .card h5,h6{
+      font-weight: 600;
+      
+    }
+
+
+    /* credit history css */
+
+    .history li{
+      list-style: none;
+      background-color: #FFE9E5;
+      border: 1px solid #D7D7D7;
+      color: black;
+      margin-top: 10px;
+   
+      
+    }
+
+    .history .profile{
+      width: 50px ;
+      height: 50px;
+      border-radius: 100%;
+      background: #E82600;
+    }
+
+    .grey{
+      color: #878787;
+      font-size: 12px;
+    }
+
+    /* quantity css */
+
+   
+  
+  .quantity-input {
+      width: 50px;
+      text-align: center;
+  }
+  .quantity-input{
+    border: 1px solid #D7D7D7;
+    background: none;
+  }
+
+  .quantity-input:focus{
+    outline: none;
+    box-shadow: none;
+  }
+
+  .quantity-container button{
+    background: none;
+  }
+
+
+  .transport input,
+  .transport textarea,
+  .transport select{
+    border: 1px solid #D7D7D7;
+    background: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    width: 100%;
+
+  }
+  .transport input:focus,
+  .transport textarea:focus,
+  .transport select:focus{
+    outline: none;
+    box-shadow: none;
+    border: 1px solid #E82600;
+  }
+ 
+  .transport .card{
+    border: none;
+    border: 1px solid #FFCDAD;
+  }
+  
+
+  .order{
+    border : 1px solid #FFCDAD;
+    box-shadow: 1px 1px 1px 2px #ffccad3d;
+    
+  }
+  .order p{
+    font-size: 14px;
+
+
+  }
+
+  .card-header{
+    background-color: white;
+    box-shadow: 2px 2px 5px 3px #71717122;
+    font-weight: 400;
+    border-radius: 20px;
+    border: none;
+  }
+
+  .replacement .btn1{
+    background: none;
+    background-color: #e42c2c48;
+    color: #EE3434;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+  }
+
+  .replacement .btn2{
+    background: white;
+    border: 1px solid  #1C67CD;
+    color: #1C67CD;
+    border-radius: 5px;
+    padding: 10px 20px;
+  }
+
+
+  .complain  input,
+  .complain  textarea,
+  .complain  select{
+    border: 1px solid #D7D7D7;
+    background: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    width: 100%;
+  }
+
+  .complain  input:focus,
+
+  .complain  textarea:focus,
+  .complain  select:focus{
+    outline: none;
+    box-shadow: none;
+    border: 1px solid #E82600;
+  }
+  
+
+  .company .card{
+    box-shadow: 2px 2px 5px 3px #71717122;
+
+
+  }
+  .company .card p{
+    color: #828282;
+
+  }
+  .company .card span{
+    background: #FFE9E5;
+    color: #E82600;
+  }
+
+  .complaint p{
+    color: #878787;
+    font-weight: 500;
+  }
+
+  .about .img-2{
+    border: 20px solid white;
+    position: relative;
+    top: -70px;
+  }
+
+  .about p{
+    font-weight: 400;
+    color: #333333;
+  }
+
+  .about .card button:hover{
+    background-color: #EE1D26;
+  }
+
+  .offer .card button:hover{
+    background-color: #EE1D26;
+  }
+
+  .contact .card button:hover{
+    background-color: #EE1D26;
+  }
+
+  .contact .card-1{
+    background: #36454F; 
+    position: relative;
+    left: 20px;
+    z-index: 1;
+  }
+
+  @media(max-width: 992px){
+    .contact .card-1{
+      left: 0px;
+    }
+  }
+
+  .contact label{
+    font-weight: 600;
+  }
+  .contact input:focus,
+  .contact textarea:focus{
+    outline: none;
+    box-shadow: none;
+    border: 1px solid #50c7ee;
+  }
+
+  
+  .product .card{
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px 0px #FFFFF0;
+    border : 1px solid #FFFFF0;
+
+  }
+
+  
+  .product .card del{
+    color: #EE1D26;
+    font-weight: normal;
+    padding-left: 10px;
+  }
+
+  .product .card .btn{
+    background-color:#50c7ee !important;
+    color: #fff !important;
+  }
+
+.product .best 
+  {
+    background-color:rgba(155, 56, 56, 0.405) !important;
+    color: #fff !important;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px 0px 10px 0px;
+    text-transform: capitalize;
+    
+
+  }
+
+  .product ul li {
+    list-style: none;
+    padding: 10px 20px;
+    
+  }
+  
+  .product ul li span{
+    font-size: 18px;
+    
+  }

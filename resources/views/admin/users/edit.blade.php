@@ -1,15 +1,18 @@
 @extends('layouts.admin')
+@section('styles')
+@include('admin.users.partials.wizard-styles')
+@endsection
 @section('content')
 <div class="content">
 
     <div class="row">
         <div class="col-lg-12">
-            <div class="panel panel-default">
+            <div class="panel panel-default user-wizard">
                 <div class="panel-heading">
                     {{ trans('global.edit') }} {{ trans('cruds.user.title_singular') }}
                 </div>
                 <div class="panel-body">
-                    <form method="POST" action="{{ route("admin.users.update", [$user->id]) }}" enctype="multipart/form-data">
+                    <form id="userWizard" method="POST" action="{{ route("admin.users.update", [$user->id]) }}" enctype="multipart/form-data">
                         @method('PUT')
                         @csrf
                         <div class="form-group {{ $errors->has('name') ? 'has-error' : '' }}">
@@ -243,6 +246,7 @@
 @endsection
 
 @section('scripts')
+@include('admin.users.partials.wizard-script')
 <script>
     $(document).ready(function () {
   function SimpleUploadAdapter(editor) {

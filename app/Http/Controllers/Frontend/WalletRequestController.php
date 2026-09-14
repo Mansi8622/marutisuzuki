@@ -7,6 +7,8 @@ use App\Http\Requests\MassDestroyWalletRequestRequest;
 use App\Http\Requests\StoreWalletRequestRequest;
 use App\Http\Requests\UpdateWalletRequestRequest;
 use App\Models\WalletRequest;
+use App\Models\CheckOrder;
+use App\Models\Transaction;
 use Gate;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -24,6 +26,19 @@ class WalletRequestController extends Controller
     public function create()
     {
         return view('frontend.walletRequests.create');
+    }
+
+    public function statement()
+    {
+        $userId = auth()->id();
+        $wallet = WalletRequest::where('vendor_id', $userId)->latest()->firstOrFail();
+        $orders = CheckOrder::where('select_user_id', $userId)->where('payment_method', 'Credit Line')->latest()->get();
+        $orders->each(function ($order) use ($userId) {
+            $order->repaid = Transaction::where('vendor_id', $userId)->where('order_id', $order->id)
+                ->whereIn('transaction_type', ['payout','cash','cheque','bank_transfer','upi','other'])->where('status', 'success')->sum('request_amount');
+            $order->outstanding = max(0, $order->total_amount - $order->repaid);
+        });
+        return view('frontend.walletRequests.statement', compact('wallet', 'orders'));
     }
 
     public function store(StoreWalletRequestRequest $request)

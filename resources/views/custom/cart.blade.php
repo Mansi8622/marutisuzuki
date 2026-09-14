@@ -1,6 +1,12 @@
 @extends('custom.master')
 
 @section('content')
+@php
+  $cartLines = collect(session('cart', []));
+  $cartMrp = $cartLines->sum(fn($i) => (float)($i['price'] ?? 0) * (int)($i['quantity'] ?? 1));
+  $cartPayable = $cartLines->sum(fn($i) => (float)($i['final_price'] ?? $i['price_1'] ?? $i['price'] ?? 0) * (int)($i['quantity'] ?? 1));
+@endphp
+<style>.cart-summary{border:0!important;border-radius:14px!important;background:#172b49!important;color:#fff;box-shadow:0 12px 26px rgba(18,34,56,.15)}.cart-summary .rowline{display:flex;justify-content:space-between;padding:9px 0;color:#c8d5e7}.cart-summary .payable{border-top:1px solid #ffffff2b;margin-top:7px;padding-top:14px;color:#fff;font-size:1.05rem;font-weight:800}.cart-summary .saved{color:#6ee7b7;font-size:.82rem}</style>
 <section class="dashboard py-5">
     <div class="container">
         <div class="row">
@@ -76,6 +82,10 @@
                         @endif
                     </div>
                 </div>
+
+                @if($cartLines->isNotEmpty())
+                <div class="card cart-summary mt-3"><div class="card-body"><h5 class="fw-bold mb-3">Cart summary</h5><div class="rowline"><span>Total MRP</span><span>₹{{ number_format($cartMrp,2) }}</span></div><div class="rowline"><span>You save</span><span class="saved">₹{{ number_format(max(0,$cartMrp-$cartPayable),2) }}</span></div><div class="rowline payable"><span>Total payable</span><span>₹{{ number_format($cartPayable,2) }}</span></div></div></div>
+                @endif
 
                 {{-- Place Order --}}
                 <div class="row mt-3">

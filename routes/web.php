@@ -226,6 +226,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'mi
     // Wallet Request
     Route::delete('wallet-requests/destroy', 'WalletRequestController@massDestroy')->name('wallet-requests.massDestroy');
     Route::resource('wallet-requests', 'WalletRequestController');
+    Route::get('wallet-statement', 'WalletRequestController@statement')->name('wallet.statement');
 
     // Audit Logs
     Route::resource('audit-logs', 'AuditLogsController', ['except' => ['create', 'store', 'edit', 'update', 'destroy']]);

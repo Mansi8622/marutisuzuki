@@ -249,5 +249,16 @@ class WalletController extends Controller
         // Optionally, you can redirect back with a success message
         return redirect()->back()->with('success', 'Payout request submitted successfully.');
     }
+
+    public function showPayoutForm(Request $request)
+    {
+        $orders = CheckOrder::where('select_user_id', Auth::id())->where('payment_method', 'Credit Line')->latest()->get();
+        $orders->each(function ($order) {
+            $order->paid = Transaction::where('vendor_id', Auth::id())->where('order_id', $order->id)
+                ->whereIn('transaction_type', ['payout','cash','cheque','bank_transfer','upi','other'])->where('status', 'success')->sum('request_amount');
+            $order->remaining = max(0, $order->total_amount - $order->paid);
+        });
+        return view('wallet.repay-credit', compact('orders'));
+    }
     
 }

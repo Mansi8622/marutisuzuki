@@ -16,6 +16,6 @@ class StoreWalletRequestRequest extends FormRequest
 
     public function rules()
     {
-        return [];
+        return ['welcome_amount' => ['required', 'numeric', 'min:1']];
     }
 }

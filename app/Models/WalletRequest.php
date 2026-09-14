@@ -21,6 +21,7 @@ class WalletRequest extends Model
     ];
 
     public const STATUS_SELECT = [
+        'Pending'   => 'Pending approval',
         'Active'    => 'Active',
         'Inactive'  => 'Inactive',
         'Suspended' => 'Suspended',

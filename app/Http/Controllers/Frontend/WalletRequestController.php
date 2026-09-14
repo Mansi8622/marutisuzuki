@@ -17,7 +17,8 @@ class WalletRequestController extends Controller
     {
         abort_if(Gate::denies('wallet_request_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        $walletRequests = WalletRequest::with(['vendor', 'created_by'])->get();
+        $walletRequests = WalletRequest::with(['vendor', 'created_by'])
+            ->where('vendor_id', auth()->id())->latest()->get();
 
         return view('frontend.walletRequests.index', compact('walletRequests'));
     }
@@ -31,9 +32,11 @@ class WalletRequestController extends Controller
 
     public function store(StoreWalletRequestRequest $request)
     {
-        $walletRequest = WalletRequest::create($request->all());
-
-        return redirect()->route('frontend.wallet-requests.index');
+        if (WalletRequest::where('vendor_id', auth()->id())->where('status', 'Pending')->exists()) {
+            return redirect()->route('frontend.wallet-requests.index')->with('message', 'Your credit request is already awaiting admin approval.');
+        }
+        WalletRequest::create(['vendor_id' => auth()->id(), 'created_by_id' => auth()->id(), 'welcome_amount' => $request->input('welcome_amount'), 'due' => 0, 'status' => 'Pending']);
+        return redirect()->route('frontend.wallet-requests.index')->with('message', 'Credit line application submitted for admin approval.');
     }
 
     public function edit(WalletRequest $walletRequest)

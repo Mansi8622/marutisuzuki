@@ -2,6 +2,10 @@
 
 @section('content')
 
+<style>
+.dashboard{background:#f5f7fb}.dashboard h1{font:800 30px 'Barlow Condensed',sans-serif;color:#13243d;margin:0 0 18px}.dashboard .table-responsive{background:#fff;border:1px solid #e5ebf3;border-radius:14px;box-shadow:0 10px 24px rgba(18,34,56,.06);overflow:hidden}.dashboard .table{margin:0}.dashboard .table thead{background:#172b49;color:#fff}.dashboard .table th{border:0!important;font-size:11px;text-transform:uppercase;letter-spacing:.05em;padding:15px}.dashboard .table td{padding:15px 12px;vertical-align:middle;border-color:#eef2f6}.dashboard .table tbody tr:hover{background:#f7f9ff}.dashboard .btn{border-radius:7px;font-weight:700}.dashboard .btn-primary{background:#3566e8;border-color:#3566e8}
+</style>
+
 @php
     $tax = \App\Models\Tax::where('status', 'Active')->first();
 @endphp
@@ -11,7 +15,7 @@
         <div class="row">
 @include('custom.sidebar')
             <div class="col-lg-9 mb-3">
-                <h1>My Orders</h1>
+                <div class="d-flex justify-content-between align-items-center mb-2"><div><h1>My Orders</h1><p class="text-muted mb-0">Track orders, shipping updates and invoices.</p></div><a class="btn btn-primary" href="/product"><i class="fa-solid fa-plus me-1"></i> New order</a></div>
 
     
 

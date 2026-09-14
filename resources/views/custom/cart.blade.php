@@ -39,21 +39,14 @@
 
                                             @php
                                                 $discount = $item['discount'] ?? 0;
-                                                $discountedPrice = $item['price'] - ($item['price'] * $discount / 100);
+                                                $discountedPrice = $item['final_price'] ?? ($item['price'] - ($item['price'] * $discount / 100));
                                             @endphp
 
                                             <p style="font-size: 18px; font-weight: 600;">
                                                 <del class="text-muted">MRP :- ₹{{ $item['price'] }}</del>
                                             </p>
 
-                                            {{-- Price According to Guard --}}
-                                            @if (Auth::guard('customer')->check())
-                                                <p class="text-primary">PRICE :- ₹ {{ $item['rate_2'] ?? 'Rate 2 not available' }}</p>
-                                            @elseif (Auth::guard('web')->check())
-                                              <b>  <p class="text-success">PRICE :- ₹ {{ $item['price_1'] }}</p></b>
-                                            @else
-                                               <b> <p class="text-success">PRICE :- ₹ {{ $discountedPrice }}</p></b>
-                                            @endif
+                                            <b><p class="text-success">PRICE :- ₹ {{ number_format($discountedPrice, 2) }}</p></b>
 
                                             {{-- Quantity Control --}}
                                             <div class="d-flex">

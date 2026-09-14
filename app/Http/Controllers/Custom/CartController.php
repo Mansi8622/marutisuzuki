@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Custom;
 
 use App\Http\Controllers\Controller;
+use App\Models\Product;
 use Illuminate\Http\Request;
 
 class CartController extends Controller
@@ -21,17 +22,20 @@ class CartController extends Controller
     $cart = session()->get('cart', []);
 
     $productId = $request->id;
+    $catalogProduct = Product::findOrFail($productId);
+    $rolePrice = $catalogProduct->sellingPrice();
     $product = [
         'id' => $productId,
         'name' => $request->name,
-        'price' => $request->price,
-        'discount' => $request->discount ?? 0, // Ensure discount is always set
-        'price_1' => $request->price_1 ?? null,
+        'price' => $catalogProduct->mrp(),
+        'final_price' => $rolePrice,
+        'discount' => $catalogProduct->discount ?? 0,
+        'price_1' => $catalogProduct->price_1,
         'quantity' => 1,
         'description' => $request->description,
         'photo' => $request->photo ?? asset('default.png'),
         'gst' => $request->gst,
-        'rate_2' => $request->rate_2 ?? null,
+        'rate_2' => $catalogProduct->rate_2,
     ];
 
     // If the product is already in cart, just update the quantity

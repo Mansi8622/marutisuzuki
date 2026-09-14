@@ -76,7 +76,7 @@
 
     <!-- Header -->
     <div class="header">
-        <img src="{{ asset('asset/img/logo.webp') }}" alt="Company Logo" style="width: 60px; height: 60px;">
+        <img src="{{ asset('asset/img/msv-logo.png') }}" alt="Maruti Suzuki Ventures" style="width: 60px; height: 60px; object-fit: contain;">
         <h2>Order Invoice</h2>
     </div>
 

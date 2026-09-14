@@ -309,7 +309,7 @@
 
                     @foreach($products as $product)
                         @php
-                            $finalPrice = $product->price - ($product->price * $product->discount / 100);
+                            $finalPrice = $product->sellingPrice();
                         @endphp
                         <div class="col-6 col-md-4 col-lg-4 mb-3">
                             <div class="card border-0 msv-product-card fit-frame position-relative"
@@ -350,10 +350,10 @@
                                         <div class="msv-price-row">
                                             @if (Auth::guard('web')->check())
                                                 <span class="cur">₹{{ number_format($finalPrice, 0) }}</span>
-                                                <del>₹{{ number_format($product->price_1, 0) }}</del>
+                                                <del>MRP ₹{{ number_format($product->mrp(), 0) }}</del>
                                             @elseif (Auth::guard('customer')->check())
                                                 <span class="cur">₹{{ number_format($finalPrice, 0) }}</span>
-                                                <span class="off">Price: ₹{{ number_format($product->rate_2, 0) }}</span>
+                                                <del>MRP ₹{{ number_format($product->mrp(), 0) }}</del>
                                             @else
                                                 <span class="cur">₹{{ number_format($finalPrice, 0) }}</span>
                                                 <del>₹{{ number_format($product->price, 0) }}</del>

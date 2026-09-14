@@ -10,8 +10,8 @@
     $img1Url    = optional($products->product_photo_2->first())->getUrl() ?? $noImagePlaceholder;
     $img2Url    = optional($products->product_photo_3)->getUrl() ?? $noImagePlaceholder;
 
-    $finalPrice = $products->price - ($products->price * $products->discount / 100);
-    $savings    = $products->price - $finalPrice;
+    $finalPrice = $products->sellingPrice();
+    $savings    = $products->mrp() - $finalPrice;
 @endphp
 
 <style>
@@ -230,12 +230,12 @@
                     @if (Auth::guard('web')->check())
                         <div class="pd-price-row">
                             <span class="cur">₹{{ number_format($products->price_1, 0) }}</span>
-                            <del>MRP ₹{{ number_format($finalPrice, 0) }}</del>
+                            <del>MRP ₹{{ number_format($products->mrp(), 0) }}</del>
                         </div>
                     @elseif (Auth::guard('customer')->check())
                         <div class="pd-price-row">
                             <span class="cur">₹{{ number_format($products->rate_2, 0) }}</span>
-                            <del>MRP ₹{{ number_format($finalPrice, 0) }}</del>
+                            <del>MRP ₹{{ number_format($products->mrp(), 0) }}</del>
                         </div>
                     @else
                         <div class="pd-price-row">

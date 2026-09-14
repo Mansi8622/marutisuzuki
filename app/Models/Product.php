@@ -163,6 +163,18 @@ public function our_stocks()
     return $this->hasMany(OurStock::class, 'select_product_id');
 }
 
+    public function sellingPrice(): float
+    {
+        if (auth('customer')->check()) return (float) ($this->rate_2 ?? $this->price);
+        if (auth('web')->check()) return (float) ($this->price_1 ?? $this->price);
+        return (float) $this->price - ((float) $this->price * (float) $this->discount / 100);
+    }
+
+    public function mrp(): float
+    {
+        return (float) $this->price;
+    }
+
     
 
 

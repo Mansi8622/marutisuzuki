@@ -488,7 +488,7 @@
       <a href="/product" class="decoration">View All <i class="fa-solid fa-arrow-right"></i></a>
     </div>
     <div class="row g-3">
-      @foreach($allproducts as $company)
+      @foreach($allproducts ?? [] as $company)
         <div class="col-lg-3 col-6 mb-3 reveal">
           <a href="{{ route('company.products', $company->id) }}" class="decoration">
             <div class="card border-0 text-center">

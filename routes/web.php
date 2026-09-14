@@ -483,6 +483,7 @@ Route::group(['as' => 'frontend.', 'namespace' => 'Frontend', 'middleware' => ['
     // Wallet Request
     Route::delete('wallet-requests/destroy', 'WalletRequestController@massDestroy')->name('wallet-requests.massDestroy');
     Route::resource('wallet-requests', 'WalletRequestController');
+    Route::get('wallet-statement', 'WalletRequestController@statement')->name('wallet.statement');
 
     // Asset Category
     Route::delete('asset-categories/destroy', 'AssetCategoryController@massDestroy')->name('asset-categories.massDestroy');

@@ -657,6 +657,7 @@ Route::view('/shipping', 'custom.shipping');
 
 Route::get('/product',[App\Http\Controllers\Custom\ProductController::class, 'index'])->name('custom.product');
 Route::get('/product-detail/{id}',[App\Http\Controllers\Custom\ProductDetailController::class, 'index'])->name('custom.product-detail');
+Route::get('/search/products', App\Http\Controllers\Custom\ProductSearchController::class)->name('custom.product-search');
 Route::get('/company-products/{id}', [App\Http\Controllers\Custom\ProductController::class, 'companyProducts'])->name('company.products');
 Route::get('/category-products/{id}', [App\Http\Controllers\Custom\ProductController::class, 'categoryProducts'])->name('category.products');
 

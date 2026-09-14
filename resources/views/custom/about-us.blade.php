@@ -172,7 +172,7 @@
       <span class="msv-eyebrow"><i class="fa-solid fa-building"></i> About Company</span>
       <h1 class="msv-title-xl mt-3 mb-3">Welcome to Maruti Suzuki Ventures — Driving Quality, Trust, and Innovation in Vehicle Accessories</h1>
       <p class="fs-5 msv-lead">At Maruti Suzuki Ventures, we are committed to enhancing your driving experience by offering a comprehensive range of genuine, high-quality accessories tailored specifically for all kind of vehicles. Our platform serves as a trusted digital marketplace where vehicle owners can find authentic products that elevate both the functionality and aesthetics of their cars.</p>
-      <p class="mt-3 fs-5 msv-lead">Backed by strategic collaborations with industry leaders like Pricol, JCBL, and EEMOT, Maruti Suzuki Ventures ensures that every product listed on our platform upholds the highest standards of durability, safety, and performance.</p>
+      <p class="mt-3 fs-5 msv-lead">Backed by strategic collaborations with industry leaders like , , and EEMOT, Maruti Suzuki Ventures ensures that every product listed on our platform upholds the highest standards of durability, safety, and performance.</p>
     </div>
   </div>
 
@@ -210,7 +210,7 @@
       <ul class="msv-spec-list fs-5 mt-3">
         <li><i class="fa-solid fa-check"></i><span><b>100% Genuine Products:</b> We only sell original accessories that fit perfectly with your car.</span></li>
         <li><i class="fa-solid fa-check"></i><span><b>Extensive Product Range:</b> From seat covers and floor mats to music systems and safety tools — we have it all!</span></li>
-        <li><i class="fa-solid fa-check"></i><span><b>Trusted Brands:</b> Our collaborations with top-tier manufacturers like Pricol, JCBL, and EEMOT guarantee you receive only the best, OEM-quality accessories.</span></li>
+        <li><i class="fa-solid fa-check"></i><span><b>Trusted Brands:</b> Our collaborations with top-tier manufacturers like , , and EEMOT guarantee you receive only the best, OEM-quality accessories.</span></li>
         <li><i class="fa-solid fa-check"></i><span><b>Easy Shopping:</b> Our website is simple to use, and we're always here to help if you have questions.</span></li>
       </ul>
     </div>
@@ -220,9 +220,9 @@
   <!-- <h2 class="msv-title-md center text-center d-block mt-lg-5 mt-5 mb-4">Our Partners</h2>
   <div class="row g-3">
     <div class="col-lg-4 col-6 msv-fade-up">
-      <a href="https://pricolxenos.com/" target="_blank" class="msv-partner fit-frame">
-        <img src="asset/img/pricol-logo.png" alt="Pricol Xenos">
-        <p>Pricol Xenos</p>
+      <a href="https://xenos.com/" target="_blank" class="msv-partner fit-frame">
+        <img src="asset/img/-logo.png" alt=" Xenos">
+        <p> Xenos</p>
       </a>
     </div>
     <div class="col-lg-4 col-6 msv-fade-up" style="animation-delay:.08s;">
@@ -232,9 +232,9 @@
       </a>
     </div>
     <div class="col-lg-4 col-12 msv-fade-up" style="animation-delay:.16s;">
-      <a href="https://jcblaccessories.com/" target="_blank" class="msv-partner fit-frame">
-        <img src="asset/img/jcbl_logo.avif" alt="JCBL Accessories" style="max-height:60px;">
-        <p>JCBL Accessories</p>
+      <a href="https://accessories.com/" target="_blank" class="msv-partner fit-frame">
+        <img src="asset/img/_logo.avif" alt=" Accessories" style="max-height:60px;">
+        <p> Accessories</p>
       </a>
     </div>
   </div> -->
@@ -252,7 +252,7 @@
           </button>
         </div>
         <div class="collapse" id="collapseExample1">
-          <p class="msv-faq-body mb-0">Yes! We only sell 100% genuine accessories that are made for all kind of vehicles. We work with trusted companies like Pricol, JCBL, and EEMOT, so you can shop with confidence.</p>
+          <p class="msv-faq-body mb-0">Yes! We only sell 100% genuine accessories that are made for all kind of vehicles. We work with trusted companies like , , and EEMOT, so you can shop with confidence.</p>
         </div>
       </div>
 

@@ -100,7 +100,9 @@ nav.navbar{
   padding: .9rem 0;
   border-bottom: 1px solid var(--line);
   position: relative;
-  overflow: hidden;
+  /* The live-search panel must extend beyond the navbar, above the category bar. */
+  overflow: visible;
+  z-index: 1050;
 }
 /* subtle scanning sweep across the navbar on load, like a fitting-check pass */
 nav.navbar::before{
@@ -147,6 +149,37 @@ nav.navbar::before{
   position:absolute; right:.9rem; top:50%; transform:translateY(-50%);
   color: var(--steel); pointer-events:none; font-size:.85rem;
 }
+.header-search .form-control{ position:relative; z-index:2; }
+.search-suggestions{
+  position:absolute; z-index:1080; top:calc(100% + .55rem); left:0; right:0;
+  background:#fff; border:1px solid rgba(111,168,220,.32); border-top:3px solid var(--orange);
+  border-radius:3px; box-shadow:0 18px 38px rgba(0,0,0,.32); overflow:hidden;
+  color:#1c2a37;
+}
+.search-suggestions[hidden]{ display:none !important; }
+.search-suggestion-head{
+  display:flex; align-items:center; justify-content:space-between; padding:.58rem .75rem;
+  background:#f4f8fb; border-bottom:1px solid #dce6ee; color:#607687;
+  font:600 .7rem 'IBM Plex Mono', monospace; text-transform:uppercase; letter-spacing:.06em;
+}
+.search-suggestion{
+  display:flex; align-items:center; gap:.75rem; padding:.62rem .75rem; color:#1c2a37;
+  text-decoration:none; border-bottom:1px solid #edf1f4; transition:background .15s, padding-left .15s;
+}
+.search-suggestion:last-child{ border-bottom:0; }
+.search-suggestion:hover, .search-suggestion.is-active{ background:#fff4ef; color:#1c2a37; padding-left:.95rem; }
+.search-suggestion__image{
+  width:52px; height:52px; flex:0 0 52px; border:1px solid #d8e2ea; border-radius:3px;
+  background:#f7fafc; display:flex; align-items:center; justify-content:center; overflow:hidden;
+}
+.search-suggestion__image img{ width:100%; height:100%; object-fit:contain; }
+.search-suggestion__image i{ color:#9fb3c6; font-size:1.15rem; }
+.search-suggestion__body{ min-width:0; flex:1; }
+.search-suggestion__name{ display:block; font-size:.88rem; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.search-suggestion__meta{ display:block; margin-top:.18rem; color:#637788; font-size:.74rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.search-suggestion__price{ color:var(--orange-dk); font:700 .92rem 'IBM Plex Mono', monospace; white-space:nowrap; }
+.search-empty{ padding:1.1rem .9rem; text-align:center; color:#637788; font-size:.85rem; }
+.search-empty i{ color:var(--orange); margin-right:.35rem; }
 
 .icon-link{
   display:flex; flex-direction:column; align-items:center; justify-content:center;
@@ -312,7 +345,7 @@ footer.footer ul.d-flex i{
 footer.footer ul.d-flex i:hover{ background: var(--orange); color: var(--navy); transform: translateY(-3px); }
 
 @media (max-width: 991.98px){
-  .header-search{ display:none; }
+  .header-search{ display:block; order:3; flex:0 0 100%; max-width:none; margin:.75rem 0 0; }
   .navbar .d-flex.align-items-center{ margin-left:auto; }
 }
 </style>
@@ -398,8 +431,9 @@ footer.footer ul.d-flex i:hover{ background: var(--orange); color: var(--navy); 
       </a>
 
       <!-- Search Bar -->
-      <div class="header-search fit-frame">
-        <input type="text" class="form-control" placeholder="Search parts, brands, vehicles...">
+      <div class="header-search fit-frame" id="productSearch">
+        <input type="search" class="form-control" id="productSearchInput" placeholder="Search parts, brands, categories or price..." autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="productSearchResults">
+        <div class="search-suggestions" id="productSearchResults" role="listbox" hidden></div>
       </div>
 
       <!-- Right Section -->
@@ -567,6 +601,75 @@ footer.footer ul.d-flex i:hover{ background: var(--orange); color: var(--navy); 
   <!-- Bootstrap 5 JS Bundle -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    (() => {
+      const input = document.getElementById('productSearchInput');
+      const results = document.getElementById('productSearchResults');
+      if (!input || !results) return;
+
+      const endpoint = @json(route('custom.product-search'));
+      let timer;
+      let controller;
+      let activeIndex = -1;
+
+      const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[char]));
+      const close = () => { results.hidden = true; input.setAttribute('aria-expanded', 'false'); activeIndex = -1; };
+      const items = () => [...results.querySelectorAll('.search-suggestion')];
+      const setActive = (index) => {
+        const matches = items();
+        if (!matches.length) return;
+        activeIndex = (index + matches.length) % matches.length;
+        matches.forEach((item, itemIndex) => item.classList.toggle('is-active', itemIndex === activeIndex));
+        matches[activeIndex].scrollIntoView({ block: 'nearest' });
+      };
+      const render = (products, term) => {
+        if (!products.length) {
+          results.innerHTML = `<div class="search-empty"><i class="fa-solid fa-magnifying-glass"></i>No products found for “${escapeHtml(term)}”</div>`;
+        } else {
+          const rows = products.map(product => {
+            const image = product.image
+              ? `<img src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)}">`
+              : '<i class="fa-solid fa-gears"></i>';
+            const labels = [...product.categories, ...product.companies].filter(Boolean).join(' · ') || product.item_code || 'Product';
+            return `<a href="${escapeHtml(product.url)}" class="search-suggestion" role="option">
+              <span class="search-suggestion__image">${image}</span>
+              <span class="search-suggestion__body"><span class="search-suggestion__name">${escapeHtml(product.name)}</span><span class="search-suggestion__meta">${escapeHtml(labels)}</span></span>
+              <span class="search-suggestion__price">₹${escapeHtml(product.price)}</span>
+            </a>`;
+          }).join('');
+          results.innerHTML = `<div class="search-suggestion-head"><span><i class="fa-solid fa-sparkles me-1"></i>Best matches</span><span>${products.length} result${products.length === 1 ? '' : 's'}</span></div>${rows}`;
+        }
+        results.hidden = false;
+        input.setAttribute('aria-expanded', 'true');
+      };
+
+      input.addEventListener('input', () => {
+        const term = input.value.trim();
+        clearTimeout(timer);
+        if (controller) controller.abort();
+        if (term.length < 3) return close();
+        timer = setTimeout(async () => {
+          controller = new AbortController();
+          try {
+            const response = await fetch(`${endpoint}?q=${encodeURIComponent(term)}`, { headers: { Accept: 'application/json' }, signal: controller.signal });
+            if (!response.ok) throw new Error('Search request failed');
+            const data = await response.json();
+            if (input.value.trim() === term) render(data.products || [], term);
+          } catch (error) {
+            if (error.name !== 'AbortError') close();
+          }
+        }, 260);
+      });
+      input.addEventListener('keydown', event => {
+        const matches = items();
+        if (event.key === 'ArrowDown' && matches.length) { event.preventDefault(); setActive(activeIndex + 1); }
+        if (event.key === 'ArrowUp' && matches.length) { event.preventDefault(); setActive(activeIndex - 1); }
+        if (event.key === 'Enter' && activeIndex >= 0 && matches[activeIndex]) { event.preventDefault(); window.location.href = matches[activeIndex].href; }
+        if (event.key === 'Escape') close();
+      });
+      document.addEventListener('click', event => { if (!document.getElementById('productSearch').contains(event.target)) close(); });
+    })();
+  </script>
 
 @if(session('success'))
     <script>

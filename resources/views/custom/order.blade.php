@@ -28,6 +28,7 @@
                         <th>Order No</th>
                         <th>Total Amount</th>
                         <th>Order Status</th>
+                        <th>Payment</th>
                         <th>Tracking</th>
                         <th>Note / Docket No</th>
                         <th>Attachment</th>
@@ -43,6 +44,7 @@
                             <td>{{ $order->order_number }}</td>
                             <td>₹ {{ number_format($order->total_amount, 2) }}</td>
                             <td>{{ ucfirst($order->order_status) }}</td>
+                            <td><span class="badge" style="background:{{ $order->payment_method === 'Credit Line' ? '#fff3cd;color:#8a5b00' : '#e8faf1;color:#087f5b' }}">{{ $order->payment_method === 'Credit Line' ? 'Credit Line' : 'Gateway / Paid' }}</span></td>
                             <td>
                                 @if($order->carrier)
                                     <a href="{{ $order->carrier->tracking_url }}" target="_blank" class="btn btn-outline-success">Track Order</a>

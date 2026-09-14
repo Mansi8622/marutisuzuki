@@ -175,6 +175,11 @@ public function our_stocks()
         return (float) $this->price;
     }
 
+    public function isInStock(): bool
+    {
+        return (int) optional($this->ourStock)->quantity_available > 0;
+    }
+
     
 
 

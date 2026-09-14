@@ -516,7 +516,7 @@
       <a href="/product" class="decoration">View All <i class="fa-solid fa-arrow-right"></i></a>
     </div>
     <div class="row g-3">
-      @foreach($newproducts as $product)
+      @foreach($newproducts ?? [] as $product)
       <div class="col-lg-3 mb-3 reveal">
         <a href="/product-detail/{{ $product->id }}" class="decoration">
           <form action="{{ route('cart.add') }}" method="POST">
@@ -594,7 +594,7 @@
       <a href="" class="decoration">View All <i class="fa-solid fa-arrow-right"></i></a>
     </div>
     <div class="row g-3">
-      @foreach($trendingproducts as $product)
+      @foreach($trendingproducts ?? [] as $product)
       <div class="col-lg-3 mb-3 reveal">
         <a href="/product-detail/{{ $product->id }}" class="decoration">
           <form action="{{ route('cart.add') }}" method="POST">
@@ -681,7 +681,7 @@
       <a href="/product" class="decoration">View All <i class="fa-solid fa-arrow-right"></i></a>
     </div>
     <div class="row g-3">
-      @foreach($exploreproducts as $product)
+      @foreach($exploreproducts ?? [] as $product)
       <div class="col-lg-3 mb-3 reveal">
         <a href="" class="decoration">
           <div class="card">

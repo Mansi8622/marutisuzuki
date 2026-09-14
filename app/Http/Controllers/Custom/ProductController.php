@@ -13,13 +13,13 @@ class ProductController extends Controller
 
     public function index()
 {
-    $products = Product::with('tags')->get(); // or with('tags', 'companies') if needed
+    $products = Product::with(['tags', 'ourStock'])->get();
     return view('custom.product', compact('products'));
 }
 
    public function companyProducts($id)
 {
-    $company = AddCompany::with('products.tags')->findOrFail($id);
+    $company = AddCompany::with(['products.tags', 'products.ourStock'])->findOrFail($id);
     $products = $company->products;
 
     return view('custom.product', compact('products', 'company'));
@@ -32,7 +32,7 @@ public function categoryProducts($id)
     $category = ProductCategory::findOrFail($id);
 
     // Since Product has belongsToMany categories, use whereHas to filter:
-    $products = Product::with(['tags', 'companies'])
+    $products = Product::with(['tags', 'companies', 'ourStock'])
                 ->whereHas('categories', function($query) use ($id) {
                     $query->where('product_category_id', $id); 
                     // or 'id' if pivot column is different, check your pivot table

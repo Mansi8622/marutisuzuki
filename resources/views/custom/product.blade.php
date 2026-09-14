@@ -166,6 +166,7 @@
 .msv-price-row .cur{ font-size:1.05rem; font-weight:700; color:#212121; font-family:'Inter'; }
 .msv-price-row del{ color:#878787; font-size:.82rem; font-weight:400; }
 .msv-price-row .off{ color:var(--fk-green); font-size:.82rem; font-weight:600; }
+.msv-stock{display:inline-flex;align-items:center;gap:.3rem;margin-top:.2rem;font-size:.72rem;font-weight:700}.msv-stock.in{color:#17834b}.msv-stock.out{color:#d92d20}
 
 /* action buttons row — Amazon "Add to Cart" (yellow) style, flat, no slide animation */
 .msv-actions{ display:flex; gap:.5rem; margin-top:.6rem; }
@@ -362,6 +363,7 @@
                                                 @endif
                                             @endif
                                         </div>
+                                        <div class="msv-stock {{ $product->isInStock() ? 'in' : 'out' }}"><i class="fa-solid {{ $product->isInStock() ? 'fa-circle-check' : 'fa-circle-xmark' }}"></i>{{ $product->isInStock() ? 'In stock — available now' : 'Out of stock' }}</div>
                                     </div>
                                 </a>
 
@@ -377,7 +379,7 @@
                                         <input type="hidden" name="quantity" value="1">
                                         <input type="hidden" name="description" value="{{ $product->description }}">
                                         <input type="hidden" name="photo" value="{{ $product->photo->first()?->getUrl() ?? 'default.png' }}">
-                                        <button type="submit" class="msv-add-cart">
+                                        <button type="submit" class="msv-add-cart" {{ $product->isInStock() ? '' : 'disabled' }}>
                                             <i class="fa-solid fa-cart-plus"></i> Add to Cart
                                         </button>
                                     </form>

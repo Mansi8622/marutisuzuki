@@ -7,11 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 
 <style>
-    /* ============================================================
-       DESIGN TOKENS — "Velocity" identity
-       Deep ignition-blue night sky, cool ice-white sections,
-       electric blue + ember red accents. Motion is the material.
-       ============================================================ */
+                                                                                                                                  
     :root{
         --ink:      #0A0E1A;
         --ink-2:    #121A2E;

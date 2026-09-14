@@ -209,16 +209,47 @@ nav.navbar::before{
 .offcanvas{
   background: var(--navy) !important;
   opacity: 1 !important;
+  border-right:1px solid rgba(111,168,220,.22) !important;
+  box-shadow:18px 0 44px rgba(0,0,0,.42);
 }
-.offcanvas-header{ border-bottom:1px solid var(--line); }
+/* The navbar uses z-index:1050 for search results.  Keep the open menu and
+   its backdrop above it so the original logo/search can never bleed through. */
+#offcanvasMenu{ z-index:1080; }
+.offcanvas-backdrop{ z-index:1070; }
+.offcanvas-header{ border-bottom:1px solid var(--line); padding:1rem 1.15rem; }
 .offcanvas-header h5, .offcanvas .btn-close{ color: var(--paper); }
 .offcanvas .btn-close{ filter: invert(1) grayscale(1) brightness(2); opacity:.8; }
-.offcanvas-body a.btn-link{
-  color: var(--paper) !important;
-  padding: .6rem 0; border-bottom: 1px dashed var(--line);
-  display:block; border-radius:0;
+.offcanvas-body{ padding:1rem 1.15rem 1.5rem; }
+.mobile-menu-brand{
+  display:flex; align-items:center; gap:.8rem; padding:.8rem;
+  background:var(--navy-2); border:1px solid var(--line); border-left:3px solid var(--orange);
+  margin-bottom:1.15rem;
 }
-.offcanvas-body a.btn-link:hover{ color: var(--orange) !important; }
+.mobile-menu-brand img{ width:54px; height:54px; object-fit:contain; background:var(--paper); border-radius:3px; padding:.2rem; }
+.mobile-menu-brand strong{ display:block; color:var(--paper); font-size:.9rem; }
+.mobile-menu-brand small{ color:var(--steel); font:500 .66rem 'IBM Plex Mono', monospace; text-transform:uppercase; letter-spacing:.06em; }
+.mobile-menu-list{ margin:0; }
+.offcanvas-body a.mobile-menu-link{
+  color:var(--paper) !important; padding:.85rem .72rem; margin-bottom:.35rem;
+  display:flex; align-items:center; gap:.8rem; text-decoration:none; border:1px solid transparent;
+  border-radius:3px; font:700 1.06rem 'Barlow Condensed', sans-serif; letter-spacing:.05em; text-transform:uppercase;
+  transition:transform .2s ease, background .2s ease, border-color .2s ease, color .2s ease;
+  animation:drawerLinkIn .36s both;
+}
+.offcanvas.show .mobile-menu-list li:nth-child(1) a{ animation-delay:.05s; }
+.offcanvas.show .mobile-menu-list li:nth-child(2) a{ animation-delay:.1s; }
+.offcanvas.show .mobile-menu-list li:nth-child(3) a{ animation-delay:.15s; }
+.offcanvas.show .mobile-menu-list li:nth-child(4) a{ animation-delay:.2s; }
+.offcanvas.show .mobile-menu-list li:nth-child(5) a{ animation-delay:.25s; }
+.offcanvas-body a.mobile-menu-link i{ color:var(--orange); width:22px; text-align:center; }
+.offcanvas-body a.mobile-menu-link span:last-child{ margin-left:auto; font-size:.7rem; color:var(--steel); transition:transform .2s ease; }
+.offcanvas-body a.mobile-menu-link:hover, .offcanvas-body a.mobile-menu-link:focus{
+  color:var(--paper) !important; background:var(--navy-3); border-color:var(--line); transform:translateX(5px);
+}
+.offcanvas-body a.mobile-menu-link:hover span:last-child{ transform:translateX(3px); color:var(--orange); }
+.mobile-menu-help{ margin-top:1.25rem; padding:.85rem .75rem; border-top:1px dashed var(--line); color:var(--steel); font-size:.75rem; }
+.mobile-menu-help a{ color:var(--paper); text-decoration:none; font:600 .8rem 'IBM Plex Mono', monospace; }
+@keyframes drawerLinkIn{ from{ opacity:0; transform:translateX(-14px); } to{ opacity:1; transform:translateX(0); } }
 
 /* ================= CATEGORY / SECOND BAR ================= */
 .header3{
@@ -345,8 +376,42 @@ footer.footer ul.d-flex i{
 footer.footer ul.d-flex i:hover{ background: var(--orange); color: var(--navy); transform: translateY(-3px); }
 
 @media (max-width: 991.98px){
-  .header-search{ display:block; order:3; flex:0 0 100%; max-width:none; margin:.75rem 0 0; }
+  nav.navbar{ padding:.7rem 0 .85rem; }
+  nav.navbar .container{ gap:.65rem; }
+  .navbar-toggler{ width:42px; height:42px; display:grid; place-items:center; padding:0; border:1px solid var(--line) !important; border-radius:3px; }
+  .navbar-brand{ margin:0; padding:.25rem .45rem; }
+  .navbar-brand img{ width:86px; height:64px; object-fit:contain; }
+  header .header-search{ display:block; order:3; flex:0 0 100%; min-width:0; max-width:none; margin:.15rem 0 0; }
+  .header-search input{ min-height:46px; font-size:16px; padding-left:1rem; }
   .navbar .d-flex.align-items-center{ margin-left:auto; }
+  .icon-link{ padding:.35rem .45rem; margin-left:.1rem; min-width:40px; }
+  .icon-link i{ font-size:1.28rem; margin:0; }
+  .cart-badge{ top:-4px; right:-3px; }
+  .top-bar .container{ justify-content:center !important; min-height:32px; font-size:.67rem; }
+  .top-bar .container > div{ margin:0 .35rem !important; }
+  .top-bar .divider-dot{ margin:0 .15rem; }
+  .trust-item{ flex:1 1 50%; padding:.72rem .6rem; }
+  .trust-item span{ font-size:.72rem; }
+  .trust-item i{ width:31px; height:31px; font-size:1rem; }
+}
+@media (max-width: 575.98px){
+  .top-bar .container{ justify-content:flex-start !important; overflow-x:auto; white-space:nowrap; }
+  .top-bar .container > div:nth-of-type(2), .top-bar .divider-dot, .top-bar .container > div:nth-of-type(3){ display:none; }
+  nav.navbar .container{ padding-left:.8rem; padding-right:.8rem; }
+  .navbar-brand img{ width:78px; height:58px; }
+  .navbar-toggler{ width:39px; height:39px; }
+  .icon-link{ min-width:36px; padding:.3rem .34rem; }
+  .icon-link i{ font-size:1.2rem; }
+  .header-search{ margin-top:.35rem !important; }
+  .search-suggestions{ max-height:58vh; overflow-y:auto; }
+  .trust-strip .container{ padding:0; }
+  .trust-item{ flex-basis:100%; padding:.7rem .8rem; }
+  .trust-item + .trust-item::before{ top:0; bottom:auto; left:.8rem; right:.8rem; width:auto; height:1px; }
+  /* A phone menu is a dedicated screen, not a narrow strip over the header. */
+  #offcanvasMenu{ width:100vw !important; max-width:none; }
+  .offcanvas-header{ padding:.9rem 1rem; }
+  .offcanvas-body{ padding:1rem; }
+  .mobile-menu-brand{ margin-bottom:1rem; }
 }
 </style>
 </head>
@@ -422,9 +487,9 @@ footer.footer ul.d-flex i:hover{ background: var(--orange); color: var(--navy); 
     <div class="container">
 
       <!-- Mobile Menu Toggle -->
-      <div class="navbar-toggler d-lg-none border-0" data-bs-toggle="offcanvas" data-bs-target="#offcanvasMenu" aria-controls="offcanvasMenu">
+      <button type="button" class="navbar-toggler d-lg-none border-0" data-bs-toggle="offcanvas" data-bs-target="#offcanvasMenu" aria-controls="offcanvasMenu" aria-label="Open menu">
         <i class="fa-solid fa-bars"></i>
-      </div>
+      </button>
 
       <a class="navbar-brand" href="/">
         <img src="{{ asset('asset/img/msv-logo.png') }}" alt="Maruti Suzuki Ventures" width="100" class="img-fluid">
@@ -432,7 +497,7 @@ footer.footer ul.d-flex i:hover{ background: var(--orange); color: var(--navy); 
 
       <!-- Search Bar -->
       <div class="header-search fit-frame" id="productSearch">
-        <input type="search" class="form-control" id="productSearchInput" placeholder="Search parts, brands, categories or price..." autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="productSearchResults">
+        <input type="search" class="form-control" id="productSearchInput" placeholder="Search parts, brands, categories..." aria-label="Search products" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="productSearchResults">
         <div class="search-suggestions" id="productSearchResults" role="listbox" hidden></div>
       </div>
 
@@ -459,13 +524,18 @@ footer.footer ul.d-flex i:hover{ background: var(--orange); color: var(--navy); 
       <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body">
-      <ul class="list-unstyled fs-5">
-        <li><a href="/" class="btn btn-link"><b>Home</b></a></li>
-        <li><a href="/product" class="btn btn-link"><b>Products</b></a></li>
-        <li><a href="/offer" class="btn btn-link"><b>Offers</b></a></li>
-        <li><a href="/about-us" class="btn btn-link"><b>About</b></a></li>
-        <li><a href="/contact" class="btn btn-link"><b>Contact</b></a></li>
+      <div class="mobile-menu-brand">
+        <img src="{{ asset('asset/img/msv-logo.png') }}" alt="Maruti Suzuki Ventures">
+        <div><strong>Maruti Suzuki Ventures</strong><small>Genuine parts, perfect fit</small></div>
+      </div>
+      <ul class="list-unstyled mobile-menu-list">
+        <li><a href="/" class="mobile-menu-link"><i class="fa-solid fa-house"></i>Home <span class="fa-solid fa-arrow-right"></span></a></li>
+        <li><a href="/product" class="mobile-menu-link"><i class="fa-solid fa-gears"></i>Products <span class="fa-solid fa-arrow-right"></span></a></li>
+        <li><a href="/offer" class="mobile-menu-link"><i class="fa-solid fa-tags"></i>Offers <span class="fa-solid fa-arrow-right"></span></a></li>
+        <li><a href="/about-us" class="mobile-menu-link"><i class="fa-solid fa-building"></i>About us <span class="fa-solid fa-arrow-right"></span></a></li>
+        <li><a href="/contact" class="mobile-menu-link"><i class="fa-solid fa-headset"></i>Contact <span class="fa-solid fa-arrow-right"></span></a></li>
       </ul>
+      <div class="mobile-menu-help"><i class="fa-solid fa-phone-volume me-2" style="color:var(--orange)"></i>Need help? <a href="tel:+917857868055">+91 78578 68055</a></div>
     </div>
   </div>
 

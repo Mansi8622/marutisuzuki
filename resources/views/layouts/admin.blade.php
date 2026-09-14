@@ -21,21 +21,39 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.5.1/min/dropzone.min.css" rel="stylesheet" />
     <link href="{{ asset('css/custom.css') }}" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root{--admin-ink:#101828;--admin-panel:#17243a;--admin-blue:#4169e1;--admin-mint:#25c69a;--admin-line:#e8edf4;--admin-bg:#f5f7fb;}
+        body{font-family:'DM Sans',sans-serif!important;background:var(--admin-bg)!important;color:var(--admin-ink)}
+        .main-header .logo{height:64px;background:#101b2d!important;border-bottom:1px solid rgba(255,255,255,.09);font-family:'Manrope',sans-serif;font-weight:800;letter-spacing:.02em;display:flex;align-items:center;justify-content:center;color:#fff!important}
+        .admin-brand-logo{width:35px;height:35px;object-fit:contain;background:#fff;border-radius:8px;padding:3px;margin-right:9px}.main-header .navbar{min-height:64px;background:#fff!important;box-shadow:0 1px 0 var(--admin-line)}
+        .main-header .sidebar-toggle{height:64px;padding:22px 18px;color:#526074!important}.main-header .sidebar-toggle:hover{background:#f4f6fa!important;color:var(--admin-blue)!important}
+        .admin-clock{height:64px;display:flex;align-items:center;gap:10px;padding:0 18px;color:#526074;font-size:12px;border-left:1px solid var(--admin-line)}.admin-clock i{font-size:18px;color:var(--admin-blue)}.admin-clock strong{display:block;color:#1b2738;font-size:13px;line-height:1.25}.admin-clock span{font-size:11px}
+        .navbar-nav>.notifications-menu>.dropdown-toggle,.navbar-nav>.user-menu>.dropdown-toggle{height:64px!important;padding:20px 16px!important;color:#526074!important}.navbar-nav>.notifications-menu>.dropdown-toggle:hover,.navbar-nav>.user-menu>.dropdown-toggle:hover{background:#f4f6fa!important}.admin-avatar{width:34px;height:34px;object-fit:cover;border-radius:50%;border:2px solid #dce6ff;margin-right:8px}.profile-fallback{display:inline-flex;align-items:center;justify-content:center;background:var(--admin-blue);color:#fff;font-weight:700}
+        .navbar-nav>.user-menu>.dropdown-menu{width:230px;border:0;border-radius:12px;box-shadow:0 18px 40px rgba(16,24,40,.16);padding:8px;margin-top:6px}.admin-profile-menu{padding:12px 10px;border-bottom:1px solid var(--admin-line);margin-bottom:6px}.admin-profile-menu strong{display:block}.admin-profile-menu small{color:#7b8798}.navbar-nav>.user-menu>.dropdown-menu a{border-radius:7px;padding:10px 12px;color:#46556b}.navbar-nav>.user-menu>.dropdown-menu a:hover{background:#f1f5ff;color:var(--admin-blue)}
+        .main-sidebar{background:#101b2d!important;padding-top:12px}.sidebar-menu>li>a{color:#bac6d8!important;border-radius:7px;margin:3px 10px;padding:12px 13px;font-weight:600}.sidebar-menu>li>a>i{width:22px}.sidebar-menu>li:hover>a,.sidebar-menu>li.active>a,.sidebar-menu>li.menu-open>a{background:#273b5b!important;color:#fff!important;border-left:3px solid #6e8cff;padding-left:10px}.sidebar-menu .treeview-menu{background:#0d1727!important;padding:5px 0 8px}.sidebar-menu .treeview-menu>li>a{color:#9eacc2!important;padding:9px 10px 9px 42px}.sidebar-menu .treeview-menu>li.active>a,.sidebar-menu .treeview-menu>li>a:hover{color:#fff!important;background:transparent}.content-wrapper{background:var(--admin-bg)!important;min-height:calc(100vh - 64px)!important}.main-footer{background:#fff;border-top:1px solid var(--admin-line);color:#667085;padding:16px}.content{padding:26px!important}
+        @media(max-width:767px){.admin-clock{display:none}.main-header .logo{width:230px}.content{padding:16px!important}.navbar-nav>.user-menu>.dropdown-menu{right:6px;left:auto}.main-header .navbar-custom-menu{float:right}.main-header .navbar-right{margin-right:0}}
+    </style>
     @yield('styles')
 </head>
 
 <body class="sidebar-mini skin-purple" style="height: auto; min-height: 100%;">
     <div class="wrapper" style="height: auto; min-height: 100%;">
         <header class="main-header">
-            <a href="#" class="logo">
-                <span class="logo-mini"><b>{{ trans('panel.site_title') }}</b></span>
-                <span class="logo-lg">{{ trans('panel.site_title') }}</span>
+            <a href="{{ route('admin.home') }}" class="logo">
+                <span class="logo-mini"><b>MSV</b></span>
+                <span class="logo-lg"><img src="{{ asset('asset/img/msv-logo.png') }}" class="admin-brand-logo" alt="MSV">MSV Admin</span>
             </a>
 
             <nav class="navbar navbar-static-top">
                 <a href="#" class="sidebar-toggle" data-toggle="push-menu" role="button">
                     <span class="sr-only">{{ trans('global.toggleNavigation') }}</span>
                 </a>
+
+                <div class="admin-clock hidden-xs">
+                    <i class="fa fa-calendar-o"></i>
+                    <div><strong id="adminLiveTime">--:--:--</strong><span id="adminLiveDate">Loading date…</span></div>
+                </div>
 
                 @if(count(config('panel.available_languages', [])) > 1)
                     <div class="navbar-custom-menu">
@@ -94,6 +112,22 @@
                                         </ul>
                                     </div>
                                 </li>
+                            </ul>
+                        </li>
+                        @php($adminPhoto = Auth::user()->getFirstMediaUrl('profile_photo', 'preview'))
+                        <li class="dropdown user-menu">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                                @if($adminPhoto)
+                                    <img src="{{ $adminPhoto }}" class="admin-avatar" alt="{{ Auth::user()->name }}">
+                                @else
+                                    <span class="admin-avatar profile-fallback">{{ strtoupper(substr(Auth::user()->name ?? 'A', 0, 1)) }}</span>
+                                @endif
+                                <span class="hidden-xs">{{ Auth::user()->name }} <i class="fa fa-angle-down"></i></span>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li class="admin-profile-menu"><strong>{{ Auth::user()->name }}</strong><small>{{ Auth::user()->email }}</small></li>
+                                <li><a href="{{ route('profile.password.edit') }}"><i class="fa fa-user-circle-o fa-fw"></i> Profile settings</a></li>
+                                <li><a href="#" onclick="event.preventDefault(); document.getElementById('logoutform').submit();"><i class="fa fa-sign-out fa-fw"></i> Logout</a></li>
                             </ul>
                         </li>
                     </ul>
@@ -156,6 +190,19 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.5/js/select2.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.5.1/min/dropzone.min.js"></script>
     <script src="{{ asset('js/main.js') }}"></script>
+    <script>
+        (function () {
+            var time = document.getElementById('adminLiveTime');
+            var date = document.getElementById('adminLiveDate');
+            if (!time || !date) return;
+            function updateClock() {
+                var now = new Date();
+                time.textContent = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                date.textContent = now.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+            }
+            updateClock(); setInterval(updateClock, 1000);
+        })();
+    </script>
     <script>
         $(function() {
   let copyButtonTrans = '{{ trans('global.datatables.copy') }}'

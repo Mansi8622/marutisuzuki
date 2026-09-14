@@ -96,7 +96,6 @@
           </div>
         </div>
 
-
         <div class="col-12">
             <div class="row py-3" style="border-top: 1px solid #D7D7D7; display: flex; align-items: center;">
       <div class="col-2">

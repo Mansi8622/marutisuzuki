@@ -23,16 +23,124 @@
     <link href="{{ asset('css/custom.css') }}" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
     <style>
-        :root{--admin-ink:#101828;--admin-panel:#17243a;--admin-blue:#4169e1;--admin-mint:#25c69a;--admin-line:#e8edf4;--admin-bg:#f5f7fb;}
-        body{font-family:'DM Sans',sans-serif!important;background:var(--admin-bg)!important;color:var(--admin-ink)}
-        .main-header .logo{height:64px;background:#101b2d!important;border-bottom:1px solid rgba(255,255,255,.09);font-family:'Manrope',sans-serif;font-weight:800;letter-spacing:.02em;display:flex;align-items:center;justify-content:center;color:#fff!important}
-        .admin-brand-logo{width:35px;height:35px;object-fit:contain;background:#fff;border-radius:8px;padding:3px;margin-right:9px}.main-header .navbar{min-height:64px;background:#fff!important;box-shadow:0 1px 0 var(--admin-line)}
-        .main-header .sidebar-toggle{height:64px;padding:22px 18px;color:#526074!important}.main-header .sidebar-toggle:hover{background:#f4f6fa!important;color:var(--admin-blue)!important}
-        .admin-clock{height:64px;display:flex;align-items:center;gap:10px;padding:0 18px;color:#526074;font-size:12px;border-left:1px solid var(--admin-line)}.admin-clock i{font-size:18px;color:var(--admin-blue)}.admin-clock strong{display:block;color:#1b2738;font-size:13px;line-height:1.25}.admin-clock span{font-size:11px}
-        .navbar-nav>.notifications-menu>.dropdown-toggle,.navbar-nav>.user-menu>.dropdown-toggle{height:64px!important;padding:20px 16px!important;color:#526074!important}.navbar-nav>.notifications-menu>.dropdown-toggle:hover,.navbar-nav>.user-menu>.dropdown-toggle:hover{background:#f4f6fa!important}.admin-avatar{width:34px;height:34px;object-fit:cover;border-radius:50%;border:2px solid #dce6ff;margin-right:8px}.profile-fallback{display:inline-flex;align-items:center;justify-content:center;background:var(--admin-blue);color:#fff;font-weight:700}
-        .navbar-nav>.user-menu>.dropdown-menu{width:230px;border:0;border-radius:12px;box-shadow:0 18px 40px rgba(16,24,40,.16);padding:8px;margin-top:6px}.admin-profile-menu{padding:12px 10px;border-bottom:1px solid var(--admin-line);margin-bottom:6px}.admin-profile-menu strong{display:block}.admin-profile-menu small{color:#7b8798}.navbar-nav>.user-menu>.dropdown-menu a{border-radius:7px;padding:10px 12px;color:#46556b}.navbar-nav>.user-menu>.dropdown-menu a:hover{background:#f1f5ff;color:var(--admin-blue)}
-        .main-sidebar{background:#101b2d!important;padding-top:12px}.sidebar-menu>li>a{color:#bac6d8!important;border-radius:7px;margin:3px 10px;padding:12px 13px;font-weight:600}.sidebar-menu>li>a>i{width:22px}.sidebar-menu>li:hover>a,.sidebar-menu>li.active>a,.sidebar-menu>li.menu-open>a{background:#273b5b!important;color:#fff!important;border-left:3px solid #6e8cff;padding-left:10px}.sidebar-menu .treeview-menu{background:#0d1727!important;padding:5px 0 8px}.sidebar-menu .treeview-menu>li>a{color:#9eacc2!important;padding:9px 10px 9px 42px}.sidebar-menu .treeview-menu>li.active>a,.sidebar-menu .treeview-menu>li>a:hover{color:#fff!important;background:transparent}.content-wrapper{background:var(--admin-bg)!important;min-height:calc(100vh - 64px)!important}.main-footer{background:#fff;border-top:1px solid var(--admin-line);color:#667085;padding:16px}.content{padding:26px!important}
-        @media(max-width:767px){.admin-clock{display:none}.main-header .logo{width:230px}.content{padding:16px!important}.navbar-nav>.user-menu>.dropdown-menu{right:6px;left:auto}.main-header .navbar-custom-menu{float:right}.main-header .navbar-right{margin-right:0}}
+        :root{
+            --ink:#16243b;
+            --muted:#6b7690;
+            --line:#e8edf4;
+            --bg:#f5f7fb;
+            --blue:#4a6cf7;
+            --mint:#12b886;
+            --sidebar-bg:#101b2d;
+            --sidebar-bg-deep:#0d1727;
+            --sidebar-hover:#1e3053;
+            --header-h:64px;
+        }
+        *{box-sizing:border-box}
+        body{font-family:'DM Sans',sans-serif!important;background:var(--bg)!important;color:var(--ink)}
+
+        /* ===== Header ===== */
+        .main-header{box-shadow:0 1px 0 var(--line)}
+        .main-header .logo{
+            height:var(--header-h);background:var(--sidebar-bg)!important;border-bottom:0;
+            font-family:'Manrope',sans-serif;font-weight:800;letter-spacing:.02em;
+            display:flex!important;align-items:center;justify-content:center;color:#fff!important;
+            transition:width .3s ease;
+        }
+        .admin-brand-logo{width:32px;height:32px;object-fit:contain;background:#fff;border-radius:8px;padding:3px;margin-right:10px;flex-shrink:0}
+        .main-header .logo .logo-lg{display:flex;align-items:center;line-height:1}
+
+        .main-header .navbar{
+            min-height:var(--header-h)!important;background:#fff!important;box-shadow:none;
+            display:flex;align-items:stretch;
+        }
+        .main-header .navbar-custom-menu,.main-header .navbar-right{float:none!important}
+        .main-header .navbar > .sidebar-toggle{
+            height:var(--header-h);display:flex;align-items:center;justify-content:center;
+            padding:0 20px;color:#526074!important;transition:background .15s,color .15s;
+        }
+        .main-header .navbar > .sidebar-toggle:hover{background:#f4f6fa!important;color:var(--blue)!important}
+
+        /* Flex row that holds toggle + clock + spacer + right menus, all vertically centered */
+        .navbar-align-row{display:flex;align-items:stretch;flex:1 1 auto;min-width:0}
+        .navbar-spacer{flex:1 1 auto}
+
+        .admin-clock{
+            height:var(--header-h);display:flex;align-items:center;gap:11px;padding:0 20px;
+            color:var(--muted);font-size:12px;border-left:1px solid var(--line);white-space:nowrap;
+        }
+        .admin-clock i{font-size:17px;color:var(--blue)}
+        .admin-clock strong{display:block;color:var(--ink);font-size:13px;line-height:1.3;font-weight:700}
+        .admin-clock span{font-size:11px;color:var(--muted)}
+
+        .main-header .navbar-nav{display:flex;align-items:stretch;height:var(--header-h);margin:0}
+        .main-header .navbar-nav>li{display:flex;align-items:stretch}
+        .navbar-nav>.notifications-menu>.dropdown-toggle,
+        .navbar-nav>.user-menu>.dropdown-toggle{
+            height:var(--header-h)!important;display:flex!important;align-items:center;
+            padding:0 18px!important;color:#526074!important;position:relative;
+            transition:background .15s,color .15s;
+        }
+        .navbar-nav>.notifications-menu>.dropdown-toggle:hover,
+        .navbar-nav>.user-menu>.dropdown-toggle:hover{background:#f4f6fa!important;color:var(--blue)!important}
+        .navbar-nav>.notifications-menu>.dropdown-toggle{font-size:17px}
+        .navbar-nav>.notifications-menu>.dropdown-toggle .label{
+            position:absolute;top:14px;right:10px;font-size:10px;font-weight:700;
+            padding:2px 5px;border-radius:20px;min-width:16px;line-height:1.3;
+        }
+
+        .admin-avatar{width:32px;height:32px;object-fit:cover;border-radius:50%;border:2px solid #dce6ff;margin-right:9px;flex-shrink:0}
+        .profile-fallback{display:inline-flex;align-items:center;justify-content:center;background:var(--blue);color:#fff;font-weight:700}
+        .navbar-nav>.user-menu>.dropdown-toggle .hidden-xs{display:inline-flex!important;align-items:center;gap:6px;font-weight:600;font-size:13px;color:var(--ink)}
+
+        .navbar-nav>.user-menu>.dropdown-menu{
+            width:236px;border:0;border-radius:12px;box-shadow:0 18px 40px rgba(16,24,40,.16);
+            padding:8px;margin-top:0;
+        }
+        .admin-profile-menu{padding:12px 10px;border-bottom:1px solid var(--line);margin-bottom:6px}
+        .admin-profile-menu strong{display:block;font-size:13.5px;color:var(--ink)}
+        .admin-profile-menu small{color:var(--muted)}
+        .navbar-nav>.user-menu>.dropdown-menu a{border-radius:7px;padding:10px 12px;color:#46556b;display:flex;align-items:center}
+        .navbar-nav>.user-menu>.dropdown-menu a:hover{background:#f1f5ff;color:var(--blue)}
+
+        .notifications-menu .dropdown-menu{border:0;border-radius:12px;box-shadow:0 18px 40px rgba(16,24,40,.16);padding:6px;margin-top:0}
+        .notifications-menu .dropdown-menu .menu{max-height:280px}
+        .notifications-menu .dropdown-menu .menu>li>a{border-radius:7px;padding:10px 12px;white-space:normal;color:#46556b}
+        .notifications-menu .dropdown-menu .menu>li>a:hover{background:#f1f5ff;color:var(--blue)}
+
+        /* ===== Sidebar ===== */
+        .main-sidebar{background:var(--sidebar-bg)!important;padding-top:14px}
+        .sidebar-menu>li>a{
+            color:#b9c6dc!important;border-radius:8px;margin:3px 12px;padding:12px 14px;
+            font-weight:600;font-size:13.5px;display:flex;align-items:center;transition:background .15s,color .15s;
+        }
+        .sidebar-menu>li>a>i{width:22px;text-align:center;margin-right:2px}
+        .sidebar-menu>li:hover>a,.sidebar-menu>li.active>a,.sidebar-menu>li.menu-open>a{
+            background:var(--sidebar-hover)!important;color:#fff!important;
+            border-left:3px solid #6e8cff;padding-left:11px;
+        }
+        .sidebar-menu .treeview-menu{background:var(--sidebar-bg-deep)!important;padding:5px 0 8px;margin:0 12px;border-radius:0 0 8px 8px}
+        .sidebar-menu .treeview-menu>li>a{color:#9eacc2!important;padding:9px 10px 9px 40px;display:flex;align-items:center;font-size:13px}
+        .sidebar-menu .treeview-menu>li.active>a,.sidebar-menu .treeview-menu>li>a:hover{color:#fff!important;background:transparent}
+
+        .content-wrapper{background:var(--bg)!important;min-height:calc(100vh - var(--header-h))!important}
+        .content{padding:26px!important}
+
+        .main-footer{
+            background:#fff;border-top:1px solid var(--line);color:var(--muted);
+            padding:16px;text-align:center;font-size:13px;
+        }
+        .main-footer strong{color:var(--ink)}
+
+        .alert{border:0;border-radius:12px;box-shadow:0 4px 14px rgba(16,24,40,.05)}
+
+        @media(max-width:767px){
+            .admin-clock{display:none}
+            .main-header .logo{width:60px!important}
+            .main-header .logo .logo-lg{display:none}
+            .content{padding:16px!important}
+            .navbar-nav>.user-menu>.dropdown-toggle .hidden-xs{display:none!important}
+            .navbar-nav>.user-menu>.dropdown-menu{right:6px;left:auto}
+        }
     </style>
     @yield('styles')
 </head>
@@ -46,17 +154,19 @@
             </a>
 
             <nav class="navbar navbar-static-top">
-                <a href="#" class="sidebar-toggle" data-toggle="push-menu" role="button">
-                    <span class="sr-only">{{ trans('global.toggleNavigation') }}</span>
-                </a>
+                <div class="navbar-align-row">
+                    <a href="#" class="sidebar-toggle" data-toggle="push-menu" role="button">
+                        <span class="sr-only">{{ trans('global.toggleNavigation') }}</span>
+                    </a>
 
-                <div class="admin-clock hidden-xs">
-                    <i class="fa fa-calendar-o"></i>
-                    <div><strong id="adminLiveTime">--:--:--</strong><span id="adminLiveDate">Loading date…</span></div>
-                </div>
+                    <div class="admin-clock hidden-xs">
+                        <i class="fa fa-calendar-o"></i>
+                        <div><strong id="adminLiveTime">--:--:--</strong><span id="adminLiveDate">Loading date…</span></div>
+                    </div>
 
-                @if(count(config('panel.available_languages', [])) > 1)
-                    <div class="navbar-custom-menu">
+                    <div class="navbar-spacer"></div>
+
+                    @if(count(config('panel.available_languages', [])) > 1)
                         <ul class="nav navbar-nav">
                             <li class="dropdown notifications-menu">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
@@ -75,10 +185,8 @@
                                 </ul>
                             </li>
                         </ul>
-                    </div>
-                @endif
+                    @endif
 
-                <div class="navbar-custom-menu">
                     <ul class="nav navbar-nav">
                         <li class="dropdown notifications-menu">
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
@@ -132,7 +240,6 @@
                         </li>
                     </ul>
                 </div>
-
             </nav>
         </header>
 
@@ -161,7 +268,7 @@
             @endif
             @yield('content')
         </div>
-        <footer class="main-footer text-center">
+        <footer class="main-footer">
             <strong>{{ trans('panel.site_title') }} &copy;</strong> {{ trans('global.allRightsReserved') }}
         </footer>
 

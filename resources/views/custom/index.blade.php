@@ -439,7 +439,7 @@
       <h1><b>Genuine Accessories, Built to Fit</b></h1>
       <h5 class="mt-2"><b>Your Trusted Source for Genuine Vehicle Accessories</b></h5>
       <p class="fs-5 mt-3">Looking to upgrade, protect, or personalize your vehicle? You are in the right place.
-      We bring you a wide range of 100% genuine car accessories — sourced directly from trusted manufacturers like Pricol, JCBL, and EEMOT.
+      We bring you a wide range of 100% genuine car accessories — sourced directly from trusted manufacturers like , , and EEMOT.
       <br><br>
       Whether you drive a Swift, Baleno, Brezza, Alto, or any other Maruti Suzuki model, we have accessories designed to fit perfectly and perform reliably.</p>
       <a href="/product" class="decoration"><button class="sb-btn-outline" style="color:var(--ink); border-color: var(--ink);">Browse Accessories</button></a>
@@ -474,7 +474,7 @@
             <div class="card-body">
               <i class="fa-solid fa-thumbs-up"></i>
               <h5><b>Reliable, Recognized, Genuine, Quality Brands</b></h5>
-              <p class="fs-5">We partner with top automotive names like Pricol, JCBL, and EEMOT.</p>
+              <p class="fs-5">We partner with top automotive names like , , and EEMOT.</p>
             </div>
           </div>
         </div>
@@ -507,12 +507,12 @@
 </div>
 <div class="sb-marquee">
   <div class="sb-marquee-track">
-    <a href="https://pricolxenos.com/" target="blank" class="decoration"><div class="sb-plate"><img src="asset/img/pricol-logo.png"><p>Pricol Xenos</p></div></a>
+    <a href="https://xenos.com/" target="blank" class="decoration"><div class="sb-plate"><img src="asset/img/-logo.png"><p> Xenos</p></div></a>
     <a href="https://www.eemotrack.com/" target="blank" class="decoration"><div class="sb-plate"><img src="asset/img/eemot-logo.webp"><p>EEMOTRACK</p></div></a>
-    <a href="https://jcblaccessories.com/" target="blank" class="decoration"><div class="sb-plate"><img src="asset/img/jcbl_logo.avif"><p>JCBL Accessories</p></div></a>
-    <a href="https://pricolxenos.com/" target="blank" class="decoration"><div class="sb-plate"><img src="asset/img/pricol-logo.png"><p>Pricol Xenos</p></div></a>
+    <a href="https://accessories.com/" target="blank" class="decoration"><div class="sb-plate"><img src="asset/img/_logo.avif"><p> Accessories</p></div></a>
+    <a href="https://xenos.com/" target="blank" class="decoration"><div class="sb-plate"><img src="asset/img/-logo.png"><p> Xenos</p></div></a>
     <a href="https://www.eemotrack.com/" target="blank" class="decoration"><div class="sb-plate"><img src="asset/img/eemot-logo.webp"><p>EEMOTRACK</p></div></a>
-    <a href="https://jcblaccessories.com/" target="blank" class="decoration"><div class="sb-plate"><img src="asset/img/jcbl_logo.avif"><p>JCBL Accessories</p></div></a>
+    <a href="https://accessories.com/" target="blank" class="decoration"><div class="sb-plate"><img src="asset/img/_logo.avif"><p> Accessories</p></div></a>
   </div>
 </div> -->
 

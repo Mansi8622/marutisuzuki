@@ -102,7 +102,7 @@ nav.navbar{
   position: relative;
   /* The live-search panel must extend beyond the navbar, above the category bar. */
   overflow: visible;
-  z-index: 1050;
+  /* z-index: 1050; */
 }
 /* subtle scanning sweep across the navbar on load, like a fitting-check pass */
 nav.navbar::before{

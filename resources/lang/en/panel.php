@@ -1,6 +1,6 @@
 <?php
 
 return [
-    'site_title' => 'emmot_new',
+    'site_title' => 'MSV',
 
 ];

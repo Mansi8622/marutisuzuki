@@ -11,7 +11,8 @@ class StoreWalletRequestRequest extends FormRequest
 {
     public function authorize()
     {
-        return Gate::allows('wallet_request_create');
+        // Any authenticated retailer may apply; approval remains admin-controlled.
+        return auth()->check();
     }
 
     public function rules()

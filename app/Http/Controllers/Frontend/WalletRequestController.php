@@ -15,8 +15,6 @@ class WalletRequestController extends Controller
 {
     public function index()
     {
-        abort_if(Gate::denies('wallet_request_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
-
         $walletRequests = WalletRequest::with(['vendor', 'created_by'])
             ->where('vendor_id', auth()->id())->latest()->get();
 
@@ -25,8 +23,6 @@ class WalletRequestController extends Controller
 
     public function create()
     {
-        abort_if(Gate::denies('wallet_request_create'), Response::HTTP_FORBIDDEN, '403 Forbidden');
-
         return view('frontend.walletRequests.create');
     }
 

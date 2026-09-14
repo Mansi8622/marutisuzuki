@@ -92,8 +92,13 @@ public function store(Request $request)
     $user = Auth::guard('web')->user();
     $walletRequest = WalletRequest::where('vendor_id', $user->id)->first();
 
-    if (!$walletRequest) {
-        return redirect()->back()->with('error', 'No wallet found for user.');
+    if ($validated['payment_method'] === 'Credit Line') {
+        if (!$walletRequest || $walletRequest->status !== 'Active') {
+            return redirect()->back()->with('error', 'Your credit line is not active. Please apply and wait for admin approval.');
+        }
+        if ((float) $walletRequest->welcome_amount < (float) $validated['total_amount']) {
+            return redirect()->back()->with('error', 'Insufficient available credit for this order.');
+        }
     }
 
     // CHECK IF USER HAS USED WALLET BEFORE
@@ -149,24 +154,17 @@ public function store(Request $request)
             }
         }
 
-        // DEDUCT FROM WALLET
-        $walletRequest->welcome_amount -= $totalAmount;
-        $walletRequest->save();
-
-        // ADD TRANSACTION RECORD
-        Transaction::create([
-            'vendor_id' => $user->id,
-            'transaction_type' => 'purchase',
-            'request_amount' => $totalAmount,
-            'created_by_id' => $user->id,
-            'status' => 'success',
-            'order_number'=>$orderNumber,
-        ]);
-
-        // UPDATE DUE AMOUNT IN WALLET
-        $walletRequest->update([
-            'due' => $walletRequest->due + $totalAmount
-        ]);
+        if ($validated['payment_method'] === 'Credit Line') {
+            // A credit purchase creates an immutable invoice-linked debit in the ledger.
+            $walletRequest->decrement('welcome_amount', $totalAmount);
+            $walletRequest->increment('due', $totalAmount);
+            Transaction::create([
+                'vendor_id' => $user->id, 'order_id' => $checkOrder->id, 'order_number' => $orderNumber,
+                'transaction_id' => 'CREDIT-' . strtoupper(uniqid()), 'transaction_type' => 'purchase',
+                'request_amount' => $totalAmount, 'paid_amount' => 0, 'total_amount' => $totalAmount,
+                'created_by_id' => $user->id, 'status' => 'success',
+            ]);
+        }
 
         session()->forget('cart');
         DB::commit();

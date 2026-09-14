@@ -150,6 +150,9 @@
     if ($deliveryFee > 0) {
         $finalTotal += $deliveryFee;
     }
+    $creditAvailable = (float) ($wallet->welcome_amount ?? 0);
+    $creditDue = (float) ($wallet->due ?? 0);
+    $creditIsUsable = $isWebUser && $wallet && $wallet->status === 'Active' && $creditAvailable >= $finalTotal;
 @endphp
 
 <div class="col-lg-4">
@@ -230,8 +233,9 @@
         <h4>Payment Method</h4>
 
         @if (Auth::check() && Auth::guard('web')->user())
-            <div class="card p-2 my-3 text-center" style="background-color: #FFCDAD; color: #E82600;">
+            <div class="card p-2 my-3 text-center" style="background:#edf3ff; border:1px solid #cddcff; color:#1f4388;">
                 <strong>Credit Line</strong>
+                <small class="d-block mt-2">Available: ₹ {{ number_format($creditAvailable, 2) }} · Due: ₹ {{ number_format($creditDue, 2) }}</small>
                 <p class="mt-3">₹ {{ $wallet->welcome_amount ?? '' }}</p>
             </div>
         @endif
@@ -256,10 +260,10 @@
             <input type="hidden" name="total_amount" value="{{ $finalTotal }}">
             <input type="hidden" name="payment_method" value="Credit Line">
 
-            @if (Auth::check() && Auth::guard('web')->user())
+            @if ($creditIsUsable && !$stockIssue)
                 <button type="submit" id="creditLineBtn" class="btn primary-bg text-white w-100">Pay To Credit Line</button>
             @else
-                <button type="button" class="btn primary-bg text-white w-100" disabled>Pay To Credit Line</button>
+                <button type="button" class="btn primary-bg text-white w-100" disabled>Credit Line Unavailable</button>
             @endif
         </form>
 

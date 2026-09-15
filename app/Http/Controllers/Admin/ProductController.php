@@ -36,7 +36,7 @@ class ProductController extends Controller
     {
         abort_if(Gate::denies('product_create'), Response::HTTP_FORBIDDEN, '403 Forbidden');
     
-        $categories = ProductCategory::pluck('name', 'id');
+        $categories = $this->hierarchicalCategories();
         $tags = ProductTag::pluck('name', 'id');
         $select_companies = AddCompany::pluck('company_name', 'id');
         $godowns = Godown::pluck('name', 'id'); // 👈 Add this line
@@ -46,6 +46,7 @@ class ProductController extends Controller
 
     public function store(StoreProductRequest $request)
     {
+        $fitmentRows = \App\Services\CatalogFitments::validateProduct($request);
         DB::beginTransaction();
 
         try {
@@ -61,6 +62,8 @@ class ProductController extends Controller
 
             // Sync related data
             $product->categories()->sync($request->input('categories', []));
+            $product->fitments()->delete();
+            $product->fitments()->createMany($fitmentRows);
             $product->tags()->sync($request->input('tags', []));
             $product->select_companies()->sync($request->input('select_companies', []));
 
@@ -126,7 +129,7 @@ class ProductController extends Controller
     {
         abort_if(Gate::denies('product_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        $categories = ProductCategory::pluck('name', 'id');
+        $categories = $this->hierarchicalCategories();
         $tags = ProductTag::pluck('name', 'id');
         $select_companies = AddCompany::pluck('company_name', 'id');
 
@@ -137,7 +140,8 @@ class ProductController extends Controller
 
   public function update(UpdateProductRequest $request, Product $product)
 {
-    DB::beginTransaction();
+    $fitmentRows = \App\Services\CatalogFitments::validateProduct($request);
+        DB::beginTransaction();
 
     try {
         // Update basic product data
@@ -145,6 +149,8 @@ class ProductController extends Controller
 
         // Sync relations
         $product->categories()->sync($request->input('categories', []));
+            $product->fitments()->delete();
+            $product->fitments()->createMany($fitmentRows);
         $product->tags()->sync($request->input('tags', []));
         $product->select_companies()->sync($request->input('select_companies', []));
 
@@ -207,6 +213,7 @@ class ProductController extends Controller
     {
         abort_if(Gate::denies('product_delete'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
+        $fitmentRows = \App\Services\CatalogFitments::validateProduct($request);
         DB::beginTransaction();
 
         try {
@@ -226,6 +233,7 @@ class ProductController extends Controller
 
     public function massDestroy(MassDestroyProductRequest $request)
     {
+        $fitmentRows = \App\Services\CatalogFitments::validateProduct($request);
         DB::beginTransaction();
 
         try {
@@ -243,5 +251,10 @@ class ProductController extends Controller
             DB::rollBack();
             return response()->json(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    private function hierarchicalCategories()
+    {
+        return ProductCategory::where('is_subcategory', false)->orderBy('name')->pluck('name', 'id');
     }
 }

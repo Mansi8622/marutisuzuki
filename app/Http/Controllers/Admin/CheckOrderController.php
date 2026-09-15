@@ -14,6 +14,7 @@ use App\Models\Carrier;
 use App\Models\OurStock;
 use Gate;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -83,54 +84,76 @@ class CheckOrderController extends Controller
 
     public function update(UpdateCheckOrderRequest $request, CheckOrder $checkOrder)
 {
-    // Update basic check order fields
-    $checkOrder->update($request->all());
+    $request->validate([
+        'confirm_qty' => ['nullable', 'array'],
+        'refund_credit' => ['nullable', 'boolean'],
+        'fulfilment_note' => ['nullable', 'string', 'max:2000'],
+    ]);
 
-    // Decode existing confirmed quantities
-    $existingConfirmQtyRaw = $checkOrder->confirm_qty;
-    $existingConfirmQty = is_string($existingConfirmQtyRaw)
-        ? json_decode($existingConfirmQtyRaw, true)
-        : (is_array($existingConfirmQtyRaw) ? $existingConfirmQtyRaw : []);
-    
-    // New confirm quantities from form
-    $newConfirmQuantities = $request->input('confirm_qty', []);
-    $productIds = $request->input('select_products', []);
+    DB::transaction(function () use ($request, $checkOrder) {
+        $ordered = $this->decodeOrderProducts($checkOrder->products);
+        $previous = json_decode($checkOrder->confirm_qty ?: '[]', true) ?: [];
+        $requested = $request->input('confirm_qty', []);
+        $confirmed = [];
+        $confirmedAmount = 0;
 
-    $productData = [];
-    $updatedConfirmQty = [];
+        foreach ($ordered as $productId => $line) {
+            $orderedQty = (int) ($line['quantity'] ?? 0);
+            $newQty = in_array((string) $productId, array_map('strval', $request->input('select_products', [])), true)
+                ? min($orderedQty, max(0, (int) ($requested[$productId] ?? 0))) : 0;
+            $oldQty = (int) ($previous[$productId] ?? 0);
+            $delta = $newQty - $oldQty;
+            $product = Product::findOrFail($productId);
+            $stock = OurStock::where('select_product_id', $productId)->lockForUpdate()->first();
 
-    foreach ($productIds as $productId) {
-        $product = Product::find($productId);
-        $newConfirmedQty = isset($newConfirmQuantities[$productId]) ? (int) $newConfirmQuantities[$productId] : 0;
-
-        $existingQty = isset($existingConfirmQty[$productId]) ? (int) $existingConfirmQty[$productId] : 0;
-        $totalConfirmedQty = $existingQty + $newConfirmedQty;
-
-        // Fetch stock entry
-        $stock = OurStock::where('select_product_id', $productId)->first();
-
-        // Check if sufficient stock is available for the new quantity
-        if (!$stock || $newConfirmedQty > $stock->quantity_available) {
-            return back()->withErrors([
-                'confirm_quantity' => "Confirmed quantity for '{$product->name}' exceeds available stock."
-            ])->withInput();
+            if ($delta > 0 && (!$stock || $delta > (int) $stock->quantity_available)) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['confirm_qty' => "Insufficient stock for {$product->name}."]);
+            }
+            if ($stock && $delta !== 0) $stock->update(['quantity_available' => max(0, (int) $stock->quantity_available - $delta)]);
+            $confirmed[$productId] = $newQty;
+            $unitPrice = (float) ($line['unit_price'] ?? $product->price_1 ?? $product->price ?? 0);
+            $gst = (float) ($line['gst'] ?? $product->gst ?? 0);
+            $confirmedAmount += $newQty * $unitPrice * (1 + $gst / 100);
         }
 
-        // Update stock
-        $stock->quantity_available -= $newConfirmedQty;
-        $stock->save();
+        $confirmedAmount = round($confirmedAmount, 2);
 
-        // Prepare updated confirm_qty and pivot data
-        $updatedConfirmQty[$productId] = $totalConfirmedQty;
-        $productData[$productId] = ['quantity' => $newConfirmedQty];
-    }
+        // A partial fulfilment must have a customer-facing explanation.  This is
+        // kept server-side so the requirement cannot be bypassed from the form.
+        if ($confirmedAmount < (float) $checkOrder->total_amount && blank($request->input('fulfilment_note'))) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'fulfilment_note' => 'Please add a reason for the unconfirmed item or quantity.',
+            ]);
+        }
 
-    // Save updated confirm_qty as JSON
-    $checkOrder->confirm_qty = json_encode($updatedConfirmQty);
-    $checkOrder->save();
+        $checkOrder->fill($request->only(['select_user_id', 'placed_at', 'order_status', 'carrier_id', 'notes']));
+        $checkOrder->confirm_qty = json_encode($confirmed);
+        $checkOrder->confirmed_amount = $confirmedAmount;
+        $checkOrder->fulfilment_note = $request->input('fulfilment_note');
+        $checkOrder->save();
 
-    // Sync pivot with new confirmed quantities only
-    $checkOrder->select_products()->sync($productData);
+        // Razorpay/online payments never alter their payment total. Credit returns are ledger entries.
+        $refundable = max(0, (float) $checkOrder->total_amount - $confirmedAmount);
+        if ((float) $checkOrder->credit_refund_amount > 0
+            && $confirmedAmount > ((float) $checkOrder->total_amount - (float) $checkOrder->credit_refund_amount)) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'confirm_qty' => 'This order already has a credit-line return. Confirmed quantity cannot be increased.',
+            ]);
+        }
+        if ($request->boolean('refund_credit') && strcasecmp((string) $checkOrder->payment_method, 'Credit Line') === 0 && $refundable > (float) $checkOrder->credit_refund_amount) {
+            $refund = $refundable - (float) $checkOrder->credit_refund_amount;
+            $wallet = \App\Models\WalletRequest::where('vendor_id', $checkOrder->select_user_id)->lockForUpdate()->firstOrFail();
+            $wallet->increment('welcome_amount', $refund);
+            $wallet->update(['due' => max(0, (float) $wallet->due - $refund)]);
+            \App\Models\Transaction::create([
+                'vendor_id' => $checkOrder->select_user_id, 'order_id' => $checkOrder->id, 'order_number' => $checkOrder->order_number,
+                'transaction_id' => 'CREDIT-RETURN-' . strtoupper(uniqid()), 'transaction_type' => 'refund',
+                'request_amount' => $refund, 'paid_amount' => 0, 'total_amount' => $refund,
+                'created_by_id' => auth()->id(), 'status' => 'success',
+            ]);
+            $checkOrder->increment('credit_refund_amount', $refund);
+        }
+    });
 
     // Handle media attachments
     $existingMediaFiles = $checkOrder->getMedia('attachment')->pluck('file_name')->toArray();
@@ -153,6 +176,23 @@ class CheckOrderController extends Controller
 
     return redirect()->route('admin.check-orders.index')->with('success', 'Check Order updated successfully.');
 }
+
+    private function decodeOrderProducts($products): array
+    {
+        $decoded = is_string($products) ? json_decode($products, true) : $products;
+        if (is_array($decoded) && isset($decoded[0]) && is_string($decoded[0])) $decoded = json_decode($decoded[0], true);
+        if (! is_array($decoded)) return [];
+
+        // Historic orders use a product-id keyed cart; newer clients may send a
+        // regular JSON list. Normalize both forms for fulfilment processing.
+        $lines = [];
+        foreach ($decoded as $key => $line) {
+            if (! is_array($line)) continue;
+            $productId = $line['id'] ?? (is_numeric($key) ? $key : null);
+            if ($productId) $lines[$productId] = $line;
+        }
+        return $lines;
+    }
 
     
     

@@ -41,7 +41,7 @@
                         <tr>
                             <td>{{ $index + 1 }}</td>
                             <td>{{ \Carbon\Carbon::parse($order->created_at)->format('d-m-Y') }}</td>
-                            <td>{{ $order->order_number }}</td>
+                            <td>{{ $order->order_number }}@include('custom.partials.order-selections', ['selectionOrder' => $order])</td>
                             <td>₹ {{ number_format($order->total_amount, 2) }}</td>
                             <td>{{ ucfirst($order->order_status) }}</td>
                             <td><span class="badge" style="background:{{ $order->payment_method === 'Credit Line' ? '#fff3cd;color:#8a5b00' : '#e8faf1;color:#087f5b' }}">{{ $order->payment_method === 'Credit Line' ? 'Credit Line' : 'Gateway / Paid' }}</span></td>

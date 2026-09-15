@@ -46,6 +46,11 @@ class CheckOrder extends Model implements HasMedia
         'select_customer_id',
         'carrier_id',
         'notes',
+        'confirmed_amount',
+        'credit_refund_amount',
+        'fulfilment_note',
+        'offer_id',
+        'offer_discount_amount',
        
        
        

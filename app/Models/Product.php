@@ -85,6 +85,21 @@ class Product extends Model implements HasMedia
         return $this->belongsToMany(CheckOrder::class);
     }
 
+    public function fitments()
+    {
+        return $this->hasMany(ProductFitment::class);
+    }
+
+    public function availableFitments()
+    {
+        return $this->fitments()->with(['category', 'vehicle.subcategory'])
+            ->whereHas('category', fn ($q) => $q->where('is_subcategory', false)->where('has_subcategories', true))
+            ->whereHas('vehicle.subcategory')->get()->filter(function ($fitment) {
+                return $this->categories->contains($fitment->category_id)
+                    && $fitment->category->subcategories()->whereKey($fitment->vehicle->subcategory_id)->exists();
+            });
+    }
+
     public function categories()
     {
         return $this->belongsToMany(ProductCategory::class);

@@ -9,6 +9,12 @@ use Illuminate\Support\Facades\Auth;
 
 class WishlistController extends Controller
 {
+    public function store(Request $request)
+    {
+        $request->validate(['product_id' => 'required|exists:products,id']);
+        return $this->addToWishlist($request->product_id);
+    }
+
     public function index()
     {
         // Check if the user is logged in via either customer or web guard

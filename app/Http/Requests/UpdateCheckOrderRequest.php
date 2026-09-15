@@ -33,11 +33,9 @@ class UpdateCheckOrderRequest extends FormRequest
             'attachment' => [
                 'array',
             ],
-            'confirm_qty' => [
-                'required',
-            ],
+            'confirm_qty' => ['nullable', 'array'],
             'carrier_id' =>[
-                'required',
+                'nullable',
             ]
         ];
     }

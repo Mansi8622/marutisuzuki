@@ -6,13 +6,15 @@
   $cartMrp = $cartLines->sum(fn($i) => (float)($i['price'] ?? 0) * (int)($i['quantity'] ?? 1));
   $cartPayable = $cartLines->sum(fn($i) => (float)($i['final_price'] ?? $i['price_1'] ?? $i['price'] ?? 0) * (int)($i['quantity'] ?? 1));
 @endphp
-<style>.cart-summary{border:0!important;border-radius:14px!important;background:#172b49!important;color:#fff;box-shadow:0 12px 26px rgba(18,34,56,.15)}.cart-summary .rowline{display:flex;justify-content:space-between;padding:9px 0;color:#c8d5e7}.cart-summary .payable{border-top:1px solid #ffffff2b;margin-top:7px;padding-top:14px;color:#fff;font-size:1.05rem;font-weight:800}.cart-summary .saved{color:#6ee7b7;font-size:.82rem}</style>
+<style>
+.cart-page{background:linear-gradient(135deg,#f7fbff,#f1f7f5);border-radius:24px;padding:28px}.cart-item{border:1px solid #e4ecf3!important;border-radius:18px!important;box-shadow:0 8px 22px rgba(34,65,91,.06);transition:.2s}.cart-item:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(34,65,91,.11)}.cart-item-image{width:150px;height:135px;object-fit:contain;background:#f8fafc;border-radius:14px;padding:10px}.item-code{display:inline-block;background:#e9f3ff;color:#21629a;border-radius:20px;padding:4px 10px;font-size:12px;font-weight:700;letter-spacing:.04em}.qty-control{width:145px;border:1px solid #d9e5ef;border-radius:10px;overflow:hidden}.qty-control button{border:0;background:#eef6fc;color:#1d649c;width:38px;font-weight:800}.qty-control input{border:0;box-shadow:none}.line-total{background:#f0fbf5;border:1px solid #ccefdc;border-radius:12px;padding:11px 14px;color:#176b45}.cart-summary{border:0!important;border-radius:18px!important;background:linear-gradient(135deg,#163350,#244f77)!important;color:#fff;box-shadow:0 16px 35px rgba(18,43,70,.18)}.cart-summary .rowline{display:flex;justify-content:space-between;padding:10px 0;color:#d9e6f4}.cart-summary .payable{border-top:1px solid #ffffff2b;margin-top:7px;padding-top:16px;color:#fff;font-size:1.15rem;font-weight:800}.cart-summary .saved{color:#82f0bf;font-size:.9rem}.cart-checkout{background:#ef6c3c!important;border:0;border-radius:10px;padding:12px 22px;font-weight:700;box-shadow:0 8px 18px #ef6c3c44}@media(max-width:576px){.cart-page{padding:15px}.cart-item-image{width:100%;height:160px}}
+</style>
 <section class="dashboard py-5">
     <div class="container">
         <div class="row">
             @include('custom.sidebar')
 
-            <div class="col-lg-9 mb-3">
+            <div class="col-lg-9 mb-3 cart-page">
                 <div class="row">
                     <div class="col-6">
                         <h1>My Cart
@@ -34,13 +36,17 @@
                     <div class="card-body">
                         @if(session('cart') && count(session('cart')) > 0)
                             @foreach(session('cart') as $item)
-                                <div class="card mb-3 px-3 py-2">
-                                    <div class="row">
-                                        <div class="col-lg-4 mb-3 text-center">
-                                            <img src="{{ $item['photo'] ?? asset('default.png') }}" alt="" style="width: 100%">
+                                @php
+                                    $unitPrice = (float) ($item['final_price'] ?? $item['price_1'] ?? $item['price'] ?? 0);
+                                @endphp
+                                <div class="card mb-3 px-3 py-3 cart-item" data-id="{{ $item['cart_key'] ?? $item['id'] }}" data-price="{{ $unitPrice }}">
+                                    <div class="row align-items-center">
+                                        <div class="col-lg-3 mb-3 text-center">
+                                            <img src="{{ $item['photo'] ?? asset('default.png') }}" alt="{{ $item['name'] }}" class="cart-item-image">
                                         </div>
-                                        <div class="col-lg-8 mb-3">
-                                            <h3>{{ $item['name'] }}</h3>
+                                        <div class="col-lg-6 mb-3">
+                                            <h4 class="mb-2">{{ $item['name'] }}</h4>@include('custom.partials.selection', ['selection' => $item])
+                                            <span class="item-code">ITEM CODE: {{ $item['item_code'] ?? 'N/A' }}</span>
                                             <p style="color: #828282; font-size: 14px;">{{ $item['description'] }}</p>
 
                                             @php
@@ -52,13 +58,13 @@
                                                 <del class="text-muted">MRP :- ₹{{ $item['price'] }}</del>
                                             </p>
 
-                                            <b><p class="text-success">PRICE :- ₹ {{ number_format($discountedPrice, 2) }}</p></b>
+                                            <b><p class="text-success">PRICE :- ₹ {{ number_format($unitPrice, 2) }}</p></b>
 
                                             {{-- Quantity Control --}}
-                                            <div class="d-flex">
-                                                <button type="button" class="change-quantity-btn input-group-text rounded-0" data-id="{{ $item['id'] }}" data-action="decrease">-</button>
-                                                <input type="text" class="quantity-input form-control text-center" name="quantity" value="{{ $item['quantity'] }}" data-id="{{ $item['id'] }}">
-                                                <button type="button" class="change-quantity-btn input-group-text rounded-0" data-id="{{ $item['id'] }}" data-action="increase">+</button>
+                                            <div class="d-flex qty-control">
+                                                <button type="button" class="change-quantity-btn" data-id="{{ $item['cart_key'] ?? $item['id'] }}" data-action="decrease">−</button>
+                                                <input type="text" class="quantity-input form-control text-center" name="quantity" value="{{ $item['quantity'] }}" data-id="{{ $item['cart_key'] ?? $item['id'] }}">
+                                                <button type="button" class="change-quantity-btn" data-id="{{ $item['cart_key'] ?? $item['id'] }}" data-action="increase">+</button>
                                             </div>
 
                                             {{-- Remove Item --}}
@@ -66,7 +72,7 @@
                                                 <form action="{{ route('cart.delete') }}" method="POST" class="d-inline delete-form">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <input type="hidden" name="id" value="{{ $item['id'] }}">
+                                                    <input type="hidden" name="id" value="{{ $item['cart_key'] ?? $item['id'] }}">
                                                     <button class="btn primary-bg text-white">
                                                         <i class="fa-solid fa-trash-can"></i> Remove
                                                     </button>
@@ -74,6 +80,7 @@
                                             </div>
 
                                         </div>
+                                        <div class="col-lg-3 mb-3"><div class="line-total"><small class="d-block text-muted">Item total</small><strong class="line-total-value">₹{{ number_format($unitPrice * $item['quantity'],2) }}</strong><small class="d-block mt-1">{{ $item['quantity'] }} × ₹{{ number_format($unitPrice,2) }}</small></div></div>
                                     </div>
                                 </div>
                             @endforeach
@@ -84,13 +91,13 @@
                 </div>
 
                 @if($cartLines->isNotEmpty())
-                <div class="card cart-summary mt-3"><div class="card-body"><h5 class="fw-bold mb-3">Cart summary</h5><div class="rowline"><span>Total MRP</span><span>₹{{ number_format($cartMrp,2) }}</span></div><div class="rowline"><span>You save</span><span class="saved">₹{{ number_format(max(0,$cartMrp-$cartPayable),2) }}</span></div><div class="rowline payable"><span>Total payable</span><span>₹{{ number_format($cartPayable,2) }}</span></div></div></div>
+                <div class="card cart-summary mt-3"><div class="card-body"><h5 class="fw-bold mb-3">Cart summary</h5><div class="rowline"><span>Total MRP</span><span id="cart-mrp-total">₹{{ number_format($cartMrp,2) }}</span></div><div class="rowline"><span>You save</span><span class="saved" id="cart-saving-total">₹{{ number_format(max(0,$cartMrp-$cartPayable),2) }}</span></div><div class="rowline payable"><span>All items total</span><span id="cart-payable-total">₹{{ number_format($cartPayable,2) }}</span></div></div></div>
                 @endif
 
                 {{-- Place Order --}}
                 <div class="row mt-3">
                     <div class="col-lg-12 text-end">
-                        <a href="/delivery" class="decoration text-center primary-bg px-3 py-2">
+                        <a href="/delivery" class="btn cart-checkout text-white">
                             <span class="text-white">Place Order</span>
                         </a>
                     </div>
@@ -184,7 +191,12 @@ document.addEventListener('DOMContentLoaded', function () {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                console.log('Quantity updated');
+                const card = document.querySelector('.cart-item[data-id="' + productId + '"]');
+                card.querySelector('.line-total-value').textContent = '₹' + Number(data.line_total).toFixed(2);
+                card.querySelector('.line-total small:last-child').textContent = data.quantity + ' × ₹' + Number(card.dataset.price).toFixed(2);
+                document.getElementById('cart-mrp-total').textContent = '₹' + Number(data.mrp_total).toFixed(2);
+                document.getElementById('cart-payable-total').textContent = '₹' + Number(data.payable_total).toFixed(2);
+                document.getElementById('cart-saving-total').textContent = '₹' + Math.max(0, Number(data.mrp_total) - Number(data.payable_total)).toFixed(2);
             } else {
                 Swal.fire('Error', data.message, 'error');
             }

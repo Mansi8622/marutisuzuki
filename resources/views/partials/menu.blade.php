@@ -123,6 +123,23 @@
                                 </a>
                             </li>
                         @endcan
+                        @can('sub_category_access')
+<li><a href="{{ route('admin.vehicles.index') }}"><i class="fa-fw fas fa-car"></i><span>Vehicle Name</span></a></li>
+                            <li class="{{ request()->is('admin/sub-categories') || request()->is('admin/sub-categories/*') ? 'active' : '' }}">
+                                <a href="{{ route('admin.sub-categories.index') }}">
+                                    <i class="fa-fw fas fa-sitemap"></i>
+                                    <span>Sub Categories</span>
+                                </a>
+                            </li>
+                        @endcan
+                        @can('offer_access')
+                            <li class="{{ request()->is('admin/offers') || request()->is('admin/offers/*') ? 'active' : '' }}">
+                                <a href="{{ route('admin.offers.index') }}">
+                                    <i class="fa-fw fas fa-percent"></i>
+                                    <span>Online Payment Offers</span>
+                                </a>
+                            </li>
+                        @endcan
                         @can('product_access')
                             <li class="{{ request()->is("admin/products") || request()->is("admin/products/*") ? "active" : "" }}">
                                 <a href="{{ route("admin.products.index") }}">

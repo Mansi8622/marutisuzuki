@@ -129,6 +129,8 @@ return [
             'id_helper'          => ' ',
             'name'               => 'Name',
             'name_helper'        => ' ',
+            'parent_category'    => 'Parent Category',
+            'parent_category_helper' => ' ',
             'description'        => 'Description',
             'description_helper' => ' ',
             'photo'              => 'Photo',

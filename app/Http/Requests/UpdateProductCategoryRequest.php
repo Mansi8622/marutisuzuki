@@ -21,6 +21,10 @@ class UpdateProductCategoryRequest extends FormRequest
                 'string',
                 'required',
             ],
+            'description' => ['nullable', 'string'],
+            'has_subcategories' => ['required', 'boolean'],
+            'subcategories' => ['required_if:has_subcategories,1', 'array'],
+            'subcategories.*' => ['integer', \Illuminate\Validation\Rule::exists('product_categories', 'id')->where('is_subcategory', true)->whereNull('deleted_at')],
         ];
     }
 }

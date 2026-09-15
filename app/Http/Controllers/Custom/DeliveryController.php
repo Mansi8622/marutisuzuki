@@ -9,6 +9,7 @@ use App\Models\Address;
 use App\Models\User;
 use App\Models\Customer;
 use App\Models\WalletRequest;
+use App\Models\Offer;
 
 class DeliveryController extends Controller
 {
@@ -79,7 +80,14 @@ class DeliveryController extends Controller
             $addressIds = null;
         }
     
-        return view('custom.delivery', compact('user', 'cartItems', 'orderSummary', 'wallet'));
+        // Offers are deliberately sent only to the online-payment flow. Credit
+        // line orders must always use their full invoice amount.
+        $offers = Offer::available()
+            ->where('minimum_order_amount', '<=', $finalPrice)
+            ->orderByDesc('discount_percent')
+            ->get();
+
+        return view('custom.delivery', compact('user', 'cartItems', 'orderSummary', 'wallet', 'offers'));
     }
     
    

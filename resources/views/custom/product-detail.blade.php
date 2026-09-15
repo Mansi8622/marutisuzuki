@@ -210,7 +210,7 @@
 
             <!-- Product Details Section -->
             <div class="col-lg-6 ps-lg-5">
-                <h3 class="pd-title text-capitalize">{{ $products->name }}</h3>
+                <h3 class="pd-title text-capitalize">{{ $products->name }}</h3>@include('custom.partials.product-selection', ['selectionProduct' => $products])
 
                 {{-- Rating badge: only shows if your Product model has rating / reviews_count fields --}}
                 @if(isset($products->rating) && $products->rating)

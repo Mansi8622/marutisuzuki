@@ -61,13 +61,16 @@
         $orderedQty = $productInfo['quantity'] ?? 0;
         $availableQty = $product->our_stock->quantity_available ?? 0;
         $qtyClass = $orderedQty > $availableQty ? 'text-danger' : 'text-success';
+        $previousConfirmed = $checkOrder->confirm_qty ? (json_decode($checkOrder->confirm_qty, true)[$product->id] ?? null) : null;
+        $defaultConfirmed = $previousConfirmed ?? min($orderedQty, $availableQty);
+        $isAvailable = $availableQty > 0;
     @endphp
-    <tr>
+    <tr data-unit-price="{{ (($productInfo['unit_price'] ?? $product->price_1 ?? $product->price ?? 0) * (1 + (($productInfo['gst'] ?? $product->gst ?? 0) / 100))) }}">
         <td>
             <input type="checkbox" name="select_products[]" value="{{ $product->id }}"
-                checked class="product-checkbox">
+                {{ $isAvailable && $defaultConfirmed > 0 ? 'checked' : '' }} class="product-checkbox">
         </td>
-        <td>{{ $product->name }}</td>
+        <td>{{ $product->name }}@foreach($productInfo['selections'] ?? [] as $selection)@include('custom.partials.selection')@endforeach</td>
         <td>
             <span class="available-qty" data-product-id="{{ $product->id }}">
                 <b>{{ $availableQty }}</b>
@@ -76,11 +79,11 @@
         <td class="{{ $qtyClass }}"><b>{{ $orderedQty }}</b></td>
         <td>
             <input type="number" name="confirm_qty[{{ $product->id }}]"
-                value="{{ $orderedQty }}"
-                min="1"
-                max="{{ $availableQty }}"
+                value="{{ old('confirm_qty.'.$product->id, $defaultConfirmed) }}"
+                min="0"
+                max="{{ $orderedQty }}"
                 class="form-control confirm-qty-input"
-                data-available="{{ $availableQty }}">
+                data-available="{{ $availableQty }}" {{ $isAvailable && $defaultConfirmed > 0 ? '' : 'disabled' }}>
         </td>
     </tr>
 @endforeach
@@ -123,6 +126,19 @@
                             <label for="notes">{{ trans('cruds.checkOrder.fields.notes') }}</label>
                             <textarea class="form-control ckeditor" name="notes" id="notes">{!! old('notes', $checkOrder->notes) !!}</textarea>
                         </div>
+                        <div class="form-group">
+                            <label for="fulfilment_note">Customer-facing fulfilment note</label>
+                            <textarea class="form-control" name="fulfilment_note" id="fulfilment_note" rows="3" placeholder="Explain why an item or quantity could not be supplied.">{{ old('fulfilment_note', $checkOrder->fulfilment_note) }}</textarea>
+                            <small class="text-muted">This message is shown to the party on their order details.</small>
+                        </div>
+                        @if(strcasecmp($checkOrder->payment_method, 'Credit Line') === 0)
+                        <div class="form-group alert alert-info">
+                            <label><input type="checkbox" name="refund_credit" value="1" id="refund_credit"> Return the unconfirmed balance to this party's credit line</label>
+                            <div class="small">Order amount: ₹{{ number_format($checkOrder->total_amount,2) }} · already returned: ₹{{ number_format($checkOrder->credit_refund_amount,2) }}</div>
+                        </div>
+                        @else
+                        <div class="alert alert-secondary">Online/Razorpay payment: amount cannot be changed or returned to credit line here.</div>
+                        @endif
 
                         {{-- Attachments --}}
                         <div class="form-group {{ $errors->has('attachment') ? 'has-error' : '' }}">
@@ -131,7 +147,7 @@
                         </div>
 
                         <div class="form-group">
-                            <button class="btn btn-danger" type="submit">
+                            <button class="btn btn-danger" type="button" id="review-submit">
                                 {{ trans('global.save') }}
                             </button>
                         </div>
@@ -141,16 +157,40 @@
         </div>
     </div>
 </div>
+<div class="modal fade" id="fulfilmentReview" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Confirm fulfilment</h5><button type="button" class="close" data-dismiss="modal">×</button></div><div class="modal-body"><p>Order amount: <strong>₹{{ number_format($checkOrder->total_amount,2) }}</strong></p><p>Confirmed item value: <strong id="confirmed-total">₹0.00</strong></p><p class="mb-0" id="credit-return-copy"></p></div><div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal">Back</button><button type="button" class="btn btn-danger" id="final-submit">Confirm & save</button></div></div></div></div>
 @endsection
 
 @section('scripts')
 <script>
     $(document).ready(function(){
 
+        $('#review-submit').on('click', function () {
+            var total = 0;
+            $('.product-checkbox:checked').each(function () {
+                var input = $('input[name="confirm_qty[' + $(this).val() + ']"]');
+                var row = $(this).closest('tr');
+                var ordered = parseFloat(row.find('td:nth-child(4)').text()) || 0;
+                var qty = Math.min(ordered, parseFloat(input.val()) || 0);
+                total += qty * (parseFloat(row.data('unit-price')) || 0);
+            });
+            $('#confirmed-total').text('₹' + total.toFixed(2));
+            var balance = Math.max(0, {{ (float) $checkOrder->total_amount }} - total);
+            $('#credit-return-copy').text($('#refund_credit').is(':checked') ? '₹' + balance.toFixed(2) + ' will be returned to the credit line.' : 'No credit-line return selected.');
+            $('#fulfilmentReview').modal('show');
+        });
+        $('#final-submit').on('click', function () { $('#order-form').trigger('submit'); });
+
+        $('.product-checkbox').on('change', function () {
+            var input = $('input[name="confirm_qty[' + $(this).val() + ']"]');
+            input.prop('disabled', !this.checked);
+            if (!this.checked) input.val(0);
+            if (this.checked && parseInt(input.val() || 0) === 0) input.val(Math.min(parseInt(input.data('available')) || 0, parseInt(input.attr('max')) || 0));
+        });
+
         // Confirm quantity validation before form submit
         $('#order-form').submit(function(e){
             let error = false;
-            $('.confirm-quantity').each(function(){
+            $('.confirm-qty-input:not(:disabled)').each(function(){
                 let available = $(this).data('available');
                 let selected = $(this).val();
                 if (parseInt(selected) > parseInt(available)) {

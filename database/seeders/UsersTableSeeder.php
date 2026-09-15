@@ -30,6 +30,9 @@ class UsersTableSeeder extends Seeder
             ],
         ];
 
-        User::insert($users);
+        // Preserve an existing administrator (including a changed password).
+        foreach ($users as $user) {
+            User::firstOrCreate(['email' => $user['email']], $user);
+        }
     }
 }

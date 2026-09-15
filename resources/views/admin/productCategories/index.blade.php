@@ -1,10 +1,15 @@
 @extends('layouts.admin')
+@php
+    $isSubCategory = $isSubCategory ?? false;
+    $routePrefix = $routePrefix ?? 'admin.product-categories';
+    $permissionPrefix = $permissionPrefix ?? 'product_category';
+@endphp
 @section('content')
 <div class="content">
-    @can('product_category_create')
+    @can($permissionPrefix . '_create')
         <div style="margin-bottom: 10px;" class="row">
             <div class="col-lg-12">
-                <a class="btn btn-success" href="{{ route('admin.product-categories.create') }}">
+                <a class="btn btn-success" href="{{ route($routePrefix . '.create') }}">
                     {{ trans('global.add') }} {{ trans('cruds.productCategory.title_singular') }}
                 </a>
             </div>
@@ -30,6 +35,7 @@
                                     <th>
                                         {{ trans('cruds.productCategory.fields.name') }}
                                     </th>
+                                    @if(! $isSubCategory)<th>Sub Categories</th>@endif
                                     <th>
                                         {{ trans('cruds.productCategory.fields.description') }}
                                     </th>
@@ -53,6 +59,13 @@
                                         <td>
                                             {{ $productCategory->name ?? '' }}
                                         </td>
+                                        @if(! $isSubCategory)<td>
+                                            @forelse($productCategory->subcategories as $subCategory)
+                                                <span class="label label-info" style="display:inline-block;margin:2px 2px 2px 0">{{ $subCategory->name }}</span>
+                                            @empty
+                                                <span class="text-muted">No sub categories</span>
+                                            @endforelse
+                                        </td>@endif
                                         <td>
                                             {{ $productCategory->description ?? '' }}
                                         </td>
@@ -64,20 +77,20 @@
                                             @endif
                                         </td>
                                         <td>
-                                            @can('product_category_show')
-                                                <a class="btn btn-xs btn-primary" href="{{ route('admin.product-categories.show', $productCategory->id) }}">
+                                            @can($permissionPrefix . '_show')
+                                                <a class="btn btn-xs btn-primary" href="{{ route($routePrefix . '.show', $productCategory->id) }}">
                                                     {{ trans('global.view') }}
                                                 </a>
                                             @endcan
 
-                                            @can('product_category_edit')
-                                                <a class="btn btn-xs btn-info" href="{{ route('admin.product-categories.edit', $productCategory->id) }}">
+                                            @can($permissionPrefix . '_edit')
+                                                <a class="btn btn-xs btn-info" href="{{ route($routePrefix . '.edit', $productCategory->id) }}">
                                                     {{ trans('global.edit') }}
                                                 </a>
                                             @endcan
 
-                                            @can('product_category_delete')
-                                                <form action="{{ route('admin.product-categories.destroy', $productCategory->id) }}" method="POST" onsubmit="return confirm('{{ trans('global.areYouSure') }}');" style="display: inline-block;">
+                                            @can($permissionPrefix . '_delete')
+                                                <form action="{{ route($routePrefix . '.destroy', $productCategory->id) }}" method="POST" onsubmit="return confirm('{{ trans('global.areYouSure') }}');" style="display: inline-block;">
                                                     <input type="hidden" name="_method" value="DELETE">
                                                     <input type="hidden" name="_token" value="{{ csrf_token() }}">
                                                     <input type="submit" class="btn btn-xs btn-danger" value="{{ trans('global.delete') }}">
@@ -105,11 +118,11 @@
 <script>
     $(function () {
   let dtButtons = $.extend(true, [], $.fn.dataTable.defaults.buttons)
-@can('product_category_delete')
+@can($permissionPrefix . '_delete')
   let deleteButtonTrans = '{{ trans('global.datatables.delete') }}'
   let deleteButton = {
     text: deleteButtonTrans,
-    url: "{{ route('admin.product-categories.massDestroy') }}",
+    url: "{{ route($routePrefix . '.massDestroy') }}",
     className: 'btn-danger',
     action: function (e, dt, node, config) {
       var ids = $.map(dt.rows({ selected: true }).nodes(), function (entry) {

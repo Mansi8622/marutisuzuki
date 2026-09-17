@@ -209,27 +209,36 @@ class ProductController extends Controller
         }
     }
 
-    public function destroy(Product $product)
-    {
-        abort_if(Gate::denies('product_delete'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+public function destroy(Product $product)
+{
+    abort_if(
+        Gate::denies('product_delete'),
+        Response::HTTP_FORBIDDEN,
+        '403 Forbidden'
+    );
 
-        $fitmentRows = \App\Services\CatalogFitments::validateProduct($request);
-        DB::beginTransaction();
+    DB::beginTransaction();
 
-        try {
-            // Delete from OurStock table
-            OurStock::where('select_product_id', $product->id)->delete();
+    try {
+        // Delete product related stock records
+        OurStock::where('select_product_id', $product->id)->delete();
 
-            $product->delete();
+        // Delete product
+        $product->delete();
 
-            DB::commit();
+        DB::commit();
 
-            return back()->with('success', 'Product deleted successfully.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->withErrors(['error' => $e->getMessage()]);
-        }
+        return back()->with('success', 'Product deleted successfully.');
+
+    } catch (\Throwable $e) {
+
+        DB::rollBack();
+
+        return back()->withErrors([
+            'error' => 'Product delete failed: ' . $e->getMessage()
+        ]);
     }
+}
 
     public function massDestroy(MassDestroyProductRequest $request)
     {

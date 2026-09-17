@@ -445,6 +445,7 @@
                                 </a>
 
                                 <div class="px-3 pb-3">
+                                    @if(isset($selectedVehicle))
                                     <form action="{{ route('cart.add') }}" method="POST" class="msv-actions">
                                         @csrf
                                         <input type="hidden" name="id" value="{{ $product->id }}">
@@ -460,8 +461,11 @@
                                         <input type="hidden" name="photo" value="{{ $product->photo->first()?->getUrl() ?? 'default.png' }}">
                                         <button type="submit" class="msv-add-cart">
                                             <i class="fa-solid fa-cart-plus"></i> Add to Cart
-                                        </button>@else<a class="msv-add-cart text-center" href="{{ url('product-detail/'.$product->id) }}">Select vehicle</a>@endif
+                                        </button>
                                     </form>
+                                    @else
+                                        <a class="msv-add-cart text-center" href="{{ url('product-detail/'.$product->id) }}">Select vehicle</a>
+                                    @endif
                                 </div>
                             </div>
                         </div>

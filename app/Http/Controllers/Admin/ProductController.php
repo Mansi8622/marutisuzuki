@@ -84,6 +84,15 @@ class ProductController extends Controller
             // Add product data to OurStock table, including quantity
             $this->addProductToOurStock($product);
 
+            // 🎁 Save FOC / scheme slabs (Slab 1: buy X get Y free, etc.)
+            if ($request->has('foc_slabs')) {
+                foreach ($request->input('foc_slabs', []) as $slab) {
+                    if (!empty($slab['slab_name']) && !empty($slab['buy_qty']) && !empty($slab['free_qty'])) {
+                        $product->focSlabs()->create($slab);
+                    }
+                }
+            }
+
             DB::commit();
 
             return redirect()->route('admin.products.index')->with('success', 'Product created successfully.');
@@ -130,7 +139,8 @@ class ProductController extends Controller
         $tags = ProductTag::pluck('name', 'id');
         $select_companies = AddCompany::pluck('company_name', 'id');
 
-        $product->load('categories', 'tags', 'select_companies', 'created_by');
+        // 🎁 focSlabs added here so the edit form can pre-fill existing slabs
+        $product->load('categories', 'tags', 'select_companies', 'created_by', 'focSlabs');
 
         return view('admin.products.edit', compact('categories', 'product', 'select_companies', 'tags'));
     }
@@ -179,6 +189,16 @@ class ProductController extends Controller
 
         // Update stock
         $this->updateProductInOurStock($product);
+
+        // 🎁 Replace FOC / scheme slabs — clear old ones and re-save from the form
+        $product->focSlabs()->delete();
+        if ($request->has('foc_slabs')) {
+            foreach ($request->input('foc_slabs', []) as $slab) {
+                if (!empty($slab['slab_name']) && !empty($slab['buy_qty']) && !empty($slab['free_qty'])) {
+                    $product->focSlabs()->create($slab);
+                }
+            }
+        }
 
         DB::commit();
 

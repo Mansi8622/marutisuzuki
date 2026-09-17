@@ -163,7 +163,10 @@ public function our_stocks()
     return $this->hasMany(OurStock::class, 'select_product_id');
 }
 
-    
-
+    // FOC / scheme slabs — e.g. Slab 1: Buy 15, Free 1
+    public function focSlabs()
+    {
+        return $this->hasMany(ProductFocSlab::class);
+    }
 
 }

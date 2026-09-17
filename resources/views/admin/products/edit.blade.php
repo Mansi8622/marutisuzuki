@@ -148,6 +148,70 @@
                             @endif
                             <span class="help-block">{{ trans('cruds.product.fields.rate_3_helper') }}</span>
                         </div>
+
+                        {{-- ================= FOC / Scheme Slabs ================= --}}
+                        <div class="form-group">
+                            <label><i class="fas fa-gift"></i> FOC Scheme Slabs <small class="text-muted">(e.g. Slab 1: Buy 15, Free 1)</small></label>
+                            <div id="focSlabWrapper"></div>
+                            <button type="button" id="addFocSlab" class="btn btn-default btn-sm mt-2">
+                                <i class="fas fa-plus"></i> Add Slab
+                            </button>
+                        </div>
+                        <script>
+                            (function(){
+                                let focIndex = 0;
+                                const wrapper = document.getElementById('focSlabWrapper');
+
+                                function addFocRow(slabName, buyQty, freeQty){
+                                    const row = document.createElement('div');
+                                    row.className = 'row foc-slab-row';
+                                    row.style.marginBottom = '8px';
+                                    row.innerHTML = `
+                                        <div class="col-md-4">
+                                            <input type="text" name="foc_slabs[${focIndex}][slab_name]" class="form-control" placeholder="Slab Name (e.g. Slab 1)" value="${slabName || ''}">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <input type="number" name="foc_slabs[${focIndex}][buy_qty]" class="form-control" placeholder="Buy Qty" value="${buyQty || ''}">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <input type="number" name="foc_slabs[${focIndex}][free_qty]" class="form-control" placeholder="Free Qty" value="${freeQty || ''}">
+                                        </div>
+                                        <div class="col-md-2">
+                                            <button type="button" class="btn btn-danger btn-sm remove-foc-slab"><i class="fas fa-trash"></i></button>
+                                        </div>
+                                    `;
+                                    wrapper.appendChild(row);
+                                    focIndex++;
+                                }
+
+                                document.getElementById('addFocSlab').addEventListener('click', function(){
+                                    addFocRow('', '', '');
+                                });
+
+                                wrapper.addEventListener('click', function(e){
+                                    const btn = e.target.closest('.remove-foc-slab');
+                                    if(btn){
+                                        btn.closest('.foc-slab-row').remove();
+                                    }
+                                });
+
+                                // Prefer old() values after a validation error; otherwise load the product's existing slabs
+                                const oldFocSlabs = @json(old('foc_slabs', []));
+                                const existingFocSlabs = @json($product->focSlabs ?? []);
+
+                                if (oldFocSlabs && oldFocSlabs.length) {
+                                    oldFocSlabs.forEach(function(slab){
+                                        addFocRow(slab.slab_name, slab.buy_qty, slab.free_qty);
+                                    });
+                                } else if (existingFocSlabs && existingFocSlabs.length) {
+                                    existingFocSlabs.forEach(function(slab){
+                                        addFocRow(slab.slab_name, slab.buy_qty, slab.free_qty);
+                                    });
+                                }
+                            })();
+                        </script>
+                        {{-- =============== End FOC / Scheme Slabs =============== --}}
+
                         <div class="form-group {{ $errors->has('photo') ? 'has-error' : '' }}">
                             <label class="required" for="photo">{{ trans('cruds.product.fields.photo') }}</label>
                             <div class="needsclick dropzone" id="photo-dropzone">

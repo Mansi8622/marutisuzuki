@@ -154,6 +154,13 @@
 .msv-rating .stars i{ font-size:.62rem; }
 .msv-rating .count{ font-size:.75rem; color:#878787; }
 
+/* item code line */
+.msv-item-code{
+  font-size:.72rem; color:var(--steel); font-family:'IBM Plex Mono', monospace;
+  margin:.15rem 0 .3rem;
+}
+.msv-item-code span{ color:#26333f; font-weight:600; }
+
 /* Assured-style badge */
 .msv-assured{
   display:inline-flex; align-items:center; gap:.25rem;
@@ -166,6 +173,7 @@
 .msv-price-row .cur{ font-size:1.05rem; font-weight:700; color:#212121; font-family:'Inter'; }
 .msv-price-row del{ color:#878787; font-size:.82rem; font-weight:400; }
 .msv-price-row .off{ color:var(--fk-green); font-size:.82rem; font-weight:600; }
+.msv-price-row .gst-note{ color:var(--steel); font-size:.72rem; font-weight:400; width:100%; }
 
 /* action buttons row — Amazon "Add to Cart" (yellow) style, flat, no slide animation */
 .msv-actions{ display:flex; gap:.5rem; margin-top:.6rem; }
@@ -189,6 +197,44 @@
   transition: background .15s ease;
 }
 .msv-buy-now:hover{ background:var(--fk-orange-dk); color:#fff; }
+
+/* ---------------------------------------------------------
+   Scheme / FOC button + modal
+--------------------------------------------------------- */
+.msv-scheme-btn{
+  display:inline-flex; align-items:center; gap:.3rem;
+  background:#FFF4E9; border:1px dashed var(--orange); color:var(--orange-dk);
+  font-size:.7rem; font-weight:700; letter-spacing:.01em;
+  padding:.22rem .5rem; border-radius:3px; margin:.2rem 0 .35rem;
+  text-transform:uppercase; cursor:pointer;
+}
+.msv-scheme-btn i{ font-size:.72rem; }
+.msv-scheme-btn:hover{ background:#FFE9D6; }
+
+.msv-foc-modal .modal-content{ border-radius:8px; border:none; overflow:hidden; }
+.msv-foc-modal .modal-header{
+  background:var(--navy); color:#fff; border-bottom:3px solid var(--orange); padding:1rem 1.25rem;
+}
+.msv-foc-modal .modal-header .btn-close{ filter:invert(1); }
+.msv-foc-modal .modal-title{ font-family:'Barlow Condensed', sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.02em; font-size:1.15rem; }
+.msv-foc-modal .modal-body{ padding:1.25rem; }
+
+.msv-foc-table{ width:100%; border-collapse:collapse; font-size:.85rem; }
+.msv-foc-table th{
+  background:var(--navy-3); color:#fff; text-align:left; padding:.55rem .7rem;
+  font-family:'Barlow Condensed', sans-serif; text-transform:uppercase; letter-spacing:.02em; font-size:.78rem;
+}
+.msv-foc-table td{ padding:.55rem .7rem; border-bottom:1px dashed #e1e8ef; color:#26333f; }
+.msv-foc-table tr:last-child td{ border-bottom:0; }
+.msv-foc-table td.slab-name{ font-weight:700; color:var(--navy-3); }
+.msv-foc-table td.foc-val{ white-space:nowrap; }
+.msv-foc-ratio{
+  display:inline-flex; align-items:center; gap:.3rem;
+  background:#FFF4E9; border:1px solid var(--orange); color:var(--orange-dk);
+  font-weight:800; font-size:.95rem; padding:.2rem .55rem; border-radius:4px;
+}
+.msv-foc-ratio small{ font-weight:600; font-size:.65rem; text-transform:uppercase; color:var(--orange-dk); margin-left:.15rem; }
+.msv-foc-modal .modal-body p.msv-foc-item-name{ font-size:.85rem; color:#26333f; margin-top:.9rem; margin-bottom:0; }
 
 /* ---------------------------------------------------------
    Mobile / responsive rules
@@ -231,14 +277,19 @@
   .msv-card-body{ padding:.55rem .55rem .7rem; }
   .msv-product-name{ font-size:.76rem; min-height:2.1em; }
 
+  .msv-item-code{ font-size:.64rem; }
+
   .msv-rating .stars{ font-size:.66rem; padding:.05rem .32rem; }
   .msv-rating .count{ font-size:.68rem; }
   .msv-assured{ font-size:.66rem; }
+
+  .msv-scheme-btn{ font-size:.62rem; padding:.18rem .4rem; }
 
   .msv-price-row{ gap:.3rem; margin:.25rem 0 .4rem; }
   .msv-price-row .cur{ font-size:.92rem; }
   .msv-price-row del{ font-size:.72rem; }
   .msv-price-row .off{ font-size:.7rem; }
+  .msv-price-row .gst-note{ font-size:.62rem; }
 
   .msv-actions{ margin-top:.45rem; }
   .msv-add-cart{ font-size:.76rem; padding:.55rem 0; border-radius:16px; }
@@ -332,6 +383,10 @@
                                     <div class="msv-card-body">
                                         <h5 class="msv-product-name">{{ $product->name }}</h5>
 
+                                        @if($product->item_code)
+                                            <p class="msv-item-code mb-0">Item: <span>{{ $product->item_code }}</span></p>
+                                        @endif
+
                                         {{-- Rating badge: only renders if your Product model has a rating/reviews field.
                                              Wire $product->rating / $product->reviews_count to enable it. --}}
                                         @if(isset($product->rating) && $product->rating)
@@ -347,19 +402,38 @@
                                             <i class="fa-solid fa-shield-halved"></i> Assured
                                         </div>
 
+                                        {{-- Scheme / FOC button — only shows if this product has slab-wise FOC data
+                                             (relation: $product->focSlabs). Add the migration + relation to enable. --}}
+                                        @if(isset($product->focSlabs) && $product->focSlabs->isNotEmpty())
+                                            <button type="button" class="msv-scheme-btn"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#msvFocModal{{ $product->id }}"
+                                                    onclick="event.preventDefault(); event.stopPropagation();">
+                                                <i class="fa-solid fa-gift"></i>
+                                                @if($product->focSlabs->count() === 1)
+                                                    {{ $product->focSlabs->first()->buy_qty }}+{{ $product->focSlabs->first()->free_qty }} Free
+                                                @else
+                                                    Scheme / Offer
+                                                @endif
+                                            </button>
+                                        @endif
+
                                         <div class="msv-price-row">
                                             @if (Auth::guard('web')->check())
                                                 <span class="cur">₹{{ number_format($finalPrice, 0) }}</span>
                                                 <del>₹{{ number_format($product->price_1, 0) }}</del>
+                                                <span class="gst-note">(Incl. GST)</span>
                                             @elseif (Auth::guard('customer')->check())
                                                 <span class="cur">₹{{ number_format($finalPrice, 0) }}</span>
                                                 <span class="off">Price: ₹{{ number_format($product->rate_2, 0) }}</span>
+                                                <span class="gst-note">(Incl. GST)</span>
                                             @else
                                                 <span class="cur">₹{{ number_format($finalPrice, 0) }}</span>
                                                 <del>₹{{ number_format($product->price, 0) }}</del>
                                                 @if($product->discount)
                                                     <span class="off">{{ $product->discount }}% off</span>
                                                 @endif
+                                                <span class="gst-note">(Incl. GST)</span>
                                             @endif
                                         </div>
                                     </div>
@@ -377,6 +451,7 @@
                                         <input type="hidden" name="quantity" value="1">
                                         <input type="hidden" name="description" value="{{ $product->description }}">
                                         <input type="hidden" name="photo" value="{{ $product->photo->first()?->getUrl() ?? 'default.png' }}">
+
                                         <button type="submit" class="msv-add-cart">
                                             <i class="fa-solid fa-cart-plus"></i> Add to Cart
                                         </button>
@@ -384,6 +459,48 @@
                                 </div>
                             </div>
                         </div>
+
+                        {{-- FOC scheme modal for this product — lists every slab (Slab 1, Slab 2, ...)
+                             Moved OUTSIDE .msv-product-card (but still inside the column) so it is not
+                             trapped by the card's `transform` / `overflow:hidden`, which was making the
+                             Bootstrap modal (position:fixed) break on close/click when the card had
+                             hover/animation transforms applied. --}}
+                        @if(isset($product->focSlabs) && $product->focSlabs->isNotEmpty())
+                            <div class="modal fade msv-foc-modal" id="msvFocModal{{ $product->id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Scheme / Offer</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <table class="msv-foc-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>FOC</th>
+                                                        <th>Scheme</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach($product->focSlabs as $slab)
+                                                        <tr>
+                                                            <td class="slab-name">{{ $slab->slab_name }}</td>
+                                                            <td class="foc-val">
+                                                                <span class="msv-foc-ratio">
+                                                                    {{ $slab->buy_qty }} + {{ $slab->free_qty }}
+                                                                    <small>FREE</small>
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                            <p class="msv-foc-item-name">Applicable on: <strong>{{ $product->name }}</strong></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
                     @endforeach
 
                 </div>

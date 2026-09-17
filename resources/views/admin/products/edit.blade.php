@@ -252,7 +252,8 @@
                                 {{ trans('global.save') }}
                             </button>
                         </div>
-                    </form>
+                    @include('admin.products.fitments')
+</form>
                 </div>
             </div>
 

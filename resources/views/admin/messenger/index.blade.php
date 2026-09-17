@@ -3,6 +3,7 @@
 @section('title', $title)
 
 @section('messenger-content')
+<style>.list-group{border-radius:13px;overflow:hidden;box-shadow:0 8px 22px rgba(16,24,40,.06)}.list-group-item{border-color:#edf1f5!important;padding:17px 18px!important;transition:.2s}.list-group-item:hover{background:#f5f8ff}.list-group-item a{color:#273b59;font-weight:600;text-decoration:none}.list-group-item .btn-danger{border-radius:6px;font-weight:700}</style>
 <div class="row">
     <div class="col-md-12">
         <div class="list-group">

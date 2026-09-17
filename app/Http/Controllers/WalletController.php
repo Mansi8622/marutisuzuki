@@ -220,6 +220,18 @@ class WalletController extends Controller
   
     public function storePayoutRequest(Request $request)
     {
+        if ($request->has('order_ids')) {
+            $request->validate(['order_ids' => 'required|array|min:1', 'amounts' => 'required|array']);
+            foreach ($request->input('order_ids') as $orderId) {
+                $amount = (float) ($request->input('amounts.' . $orderId) ?? 0);
+                if ($amount <= 0) continue;
+                $order = CheckOrder::where('id', $orderId)->where('select_user_id', Auth::id())->firstOrFail();
+                $paid = Transaction::where('vendor_id', Auth::id())->where('order_id', $order->id)->whereIn('transaction_type', ['payout','cash','cheque','bank_transfer','upi','other'])->where('status', 'success')->sum('request_amount');
+                if ($amount > ($order->total_amount - $paid)) return back()->with('error', 'Repayment amount cannot exceed invoice balance.');
+                Transaction::create(['order_id'=>$order->id,'order_number'=>$order->order_number,'transaction_id'=>'REPAY-'.strtoupper(uniqid()),'request_amount'=>$amount,'paid_amount'=>$amount,'total_amount'=>$order->total_amount,'vendor_id'=>Auth::id(),'transaction_type'=>'payout','status'=>'pending','created_by_id'=>Auth::id()]);
+            }
+            return redirect()->route('frontend.wallet.statement')->with('message', 'Repayment request submitted. Payment verification is pending.');
+        }
         // Validate form data
         $request->validate([
             'order_id' => 'required|exists:check_orders,id',
@@ -248,6 +260,18 @@ class WalletController extends Controller
     
         // Optionally, you can redirect back with a success message
         return redirect()->back()->with('success', 'Payout request submitted successfully.');
+    }
+
+    public function showPayoutForm(Request $request)
+    {
+        $orders = CheckOrder::where('select_user_id', Auth::id())->where('payment_method', 'Credit Line')->latest()->get();
+        $orders->each(function ($order) {
+            $order->paid = Transaction::where('vendor_id', Auth::id())->where('order_id', $order->id)
+                ->whereIn('transaction_type', ['payout','cash','cheque','bank_transfer','upi','other'])->where('status', 'success')->sum('request_amount');
+            $order->remaining = max(0, $order->total_amount - $order->paid);
+            $order->payments = Transaction::where('vendor_id', Auth::id())->where('order_id', $order->id)->whereIn('transaction_type', ['payout','cash','cheque','bank_transfer','upi','other'])->latest()->get();
+        });
+        return view('wallet.repay-credit', compact('orders'));
     }
     
 }

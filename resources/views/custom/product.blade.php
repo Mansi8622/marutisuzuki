@@ -3,8 +3,7 @@
 @section('content')
 
 @php
-    use App\Models\ProductCategory;
-    $categories = ProductCategory::orderBy('name')->get(); // Sorted alphabetically
+    $categories = $categories ?? App\Models\ProductCategory::with('subcategories.vehicles')->where('is_subcategory', false)->orderBy('name')->get();
 
     // Self-contained inline placeholder (no external dependency) shown when a product has no photo
     $noImagePlaceholder = 'data:image/svg+xml;utf8,' . rawurlencode('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400"><rect width="400" height="400" fill="#F5F7FA"/><g fill="#C7CFD6"><rect x="130" y="140" width="140" height="110" rx="6" fill="none" stroke="#C7CFD6" stroke-width="6"/><circle cx="165" cy="175" r="14"/><path d="M130 235 L180 190 L215 220 L245 195 L270 235 Z"/></g><text x="200" y="285" font-family="Arial, sans-serif" font-size="16" fill="#9AA7B3" text-anchor="middle">No Image</text></svg>');
@@ -173,7 +172,6 @@
 .msv-price-row .cur{ font-size:1.05rem; font-weight:700; color:#212121; font-family:'Inter'; }
 .msv-price-row del{ color:#878787; font-size:.82rem; font-weight:400; }
 .msv-price-row .off{ color:var(--fk-green); font-size:.82rem; font-weight:600; }
-.msv-price-row .gst-note{ color:var(--steel); font-size:.72rem; font-weight:400; width:100%; }
 
 /* action buttons row — Amazon "Add to Cart" (yellow) style, flat, no slide animation */
 .msv-actions{ display:flex; gap:.5rem; margin-top:.6rem; }
@@ -321,30 +319,32 @@
             <div class="col-12 col-lg-4 mb-3 msv-sidebar-col">
                 <div class="msv-filter-card px-3 py-3 fit-frame">
                     <h4><i class="fa-solid fa-sliders"></i> Filter By Price</h4>
-                    <div class="progress mb-3">
-                        <div class="progress-bar w-75" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
-                    </div>
-                    <div>
-                        <button class="btn msv-btn px-3 py-2">Apply Filters</button>
-                    </div>
+                    <form method="GET" action="{{ isset($category) ? route('category.products', $category->id) : route('custom.product') }}" class="row g-2"><input type="hidden" name="subcategory" value="{{ request('subcategory') }}"><input type="hidden" name="vehicle" value="{{ request('vehicle') }}">
+                        <div class="col-6"><input type="number" min="0" step="0.01" name="min_price" value="{{ request('min_price') }}" class="form-control" placeholder="Min ₹"></div>
+                        <div class="col-6"><input type="number" min="0" step="0.01" name="max_price" value="{{ request('max_price') }}" class="form-control" placeholder="Max ₹"></div>
+                        <div class="col-12 d-flex gap-2"><button class="btn msv-btn px-3 py-2" type="submit">Apply filters</button>@if(request()->filled('min_price') || request()->filled('max_price'))<a href="{{ isset($category) ? route('category.products', $category->id) : route('custom.product') }}" class="btn btn-light">Clear</a>@endif</div>
+                    </form>
                 </div>
 
                 <h2 class="msv-heading py-3 fs-3">All Categories</h2>
 
                 <div class="msv-filter-card px-3 py-3 fit-frame">
                     <ul class="list-unstyled msv-cat-list">
-                        @foreach($categories as $category)
+                        @foreach($categories as $sidebarCategory)
                             <li>
-                                <a href="{{ route('category.products', $category->id) }}"
+                                <a href="{{ route('category.products', $sidebarCategory->id) }}"
                                    class="dropdown-item text-dark d-flex align-items-center">
-                                    @if($category->photo)
-                                        <img src="{{ $category->photo->preview }}" alt="{{ $category->name }}"
+                                    @if($sidebarCategory->photo)
+                                        <img src="{{ $sidebarCategory->photo->preview }}" alt="{{ $sidebarCategory->name }}"
                                              style="width: 25px; height: 25px; object-fit: cover;" class="me-2 rounded">
                                     @else
                                         <i class="fa-solid fa-gear me-2 fallback"></i>
                                     @endif
-                                    {{ $category->name }}
+                                    {{ $sidebarCategory->name }}
                                 </a>
+                                @foreach($sidebarCategory->subcategories as $subCategory)
+                                  <a href="{{ route('category.products', ['id' => $sidebarCategory->id, 'subcategory' => $subCategory->id]) }}" class="dropdown-item text-muted small ps-5"><i class="fa-solid fa-angle-right me-2"></i>{{ $subCategory->name }}</a>
+                                @endforeach
                             </li>
                         @endforeach
                     </ul>
@@ -355,12 +355,18 @@
             <div class="col-12 col-lg-8 mb-3 msv-products-col">
                 <div class="row">
                     <div class="col-12 text-center">
-                        <h2 class="msv-heading py-3">Products</h2>
+@if(isset($selectedCategory))<p><a href="{{ route('custom.product') }}">Categories</a> / <a href="{{ route('category.products', $selectedCategory->id) }}">{{ $selectedCategory->name }}</a>@if(isset($selectedCompany)) / <a href="{{ route('category.products', ['id'=>$selectedCategory->id, 'subcategory'=>$selectedCompany->id]) }}">{{ $selectedCompany->name }}</a>@endif @if(isset($selectedVehicle)) / {{ $selectedVehicle->name }}@endif</p>@endif
+                        <h2 class="msv-heading py-3">{{ $selectedCategory->name ?? 'Categories' }}</h2>
                     </div>
-
+                    @if(isset($browseCategories) && $browseCategories->isNotEmpty())
+                        <div class="col-12"><p class="text-center text-muted mb-4">Choose a vehicle company or model to see matching products.</p></div>
+                        @foreach($browseCategories as $childCategory)
+                            <div class="col-6 col-md-4 mb-3"><a href="{{ ($browseLevel ?? 'category') === 'category' ? route('category.products', $childCategory->id) : route('category.products', array_filter(['id' => $selectedCategory->id, 'subcategory' => $selectedCompany->id ?? $childCategory->id, 'vehicle' => ($browseLevel ?? '') === 'vehicle' ? $childCategory->id : null])) }}" class="text-decoration-none"><div class="card h-100 border-0 shadow-sm text-center p-3"><div class="mb-2 text-primary fs-3"><i class="fa-solid fa-car-side"></i></div>@if($childCategory->photo)<img src="{{ $childCategory->photo->preview }}" alt="{{ $childCategory->name }}" style="height:76px;object-fit:contain" class="mb-2">@endif<h5 class="mb-0 text-dark">{{ $childCategory->name }}</h5><small class="text-muted">{{ ($browseLevel ?? '') === 'company' ? 'View vehicles' : 'View products' }}</small></div></a></div>
+                        @endforeach
+                    @else
                     @foreach($products as $product)
                         @php
-                            $finalPrice = $product->price - ($product->price * $product->discount / 100);
+                            $finalPrice = $product->sellingPrice();
                         @endphp
                         <div class="col-6 col-md-4 col-lg-4 mb-3">
                             <div class="card border-0 msv-product-card fit-frame position-relative"
@@ -368,7 +374,7 @@
 
                                 <span class="msv-wish"><i class="fa-regular fa-heart"></i></span>
 
-                                <a href="/product-detail/{{ $product->id }}" class="decoration">
+                                <a href="{{ url('product-detail/'.$product->id).'?'.http_build_query(['category' => $selectedCategory->id ?? null, 'subcategory' => $selectedCompany->id ?? null, 'vehicle' => $selectedVehicle->id ?? null]) }}" class="decoration">
                                     <div class="msv-img-wrap">
                                         @if($product->tags->isNotEmpty())
                                             @foreach($product->tags as $tag)
@@ -422,11 +428,9 @@
                                             @if (Auth::guard('web')->check())
                                                 <span class="cur">₹{{ number_format($finalPrice, 0) }}</span>
                                                 <del>₹{{ number_format($product->price_1, 0) }}</del>
-                                                <span class="gst-note">(Incl. GST)</span>
                                             @elseif (Auth::guard('customer')->check())
                                                 <span class="cur">₹{{ number_format($finalPrice, 0) }}</span>
                                                 <span class="off">Price: ₹{{ number_format($product->rate_2, 0) }}</span>
-                                                <span class="gst-note">(Incl. GST)</span>
                                             @else
                                                 <span class="cur">₹{{ number_format($finalPrice, 0) }}</span>
                                                 <del>₹{{ number_format($product->price, 0) }}</del>
@@ -436,6 +440,7 @@
                                                 <span class="gst-note">(Incl. GST)</span>
                                             @endif
                                         </div>
+                                        <div class="msv-stock {{ $product->isInStock() ? 'in' : 'out' }}"><i class="fa-solid {{ $product->isInStock() ? 'fa-circle-check' : 'fa-circle-xmark' }}"></i>{{ $product->isInStock() ? 'In stock — available now' : 'Out of stock' }}</div>
                                     </div>
                                 </a>
 
@@ -443,6 +448,8 @@
                                     <form action="{{ route('cart.add') }}" method="POST" class="msv-actions">
                                         @csrf
                                         <input type="hidden" name="id" value="{{ $product->id }}">
+<input type="hidden" name="category_id" value="{{ $selectedCategory->id ?? '' }}">
+<input type="hidden" name="fitment_id" value="{{ isset($selectedVehicle) ? optional($product->fitments->first(fn($f) => $f->category_id == $selectedCategory->id && $f->vehicle_id == $selectedVehicle->id))->id : '' }}">
                                         <input type="hidden" name="name" value="{{ $product->name }}">
                                         <input type="hidden" name="price" value="{{ $product->price }}">
                                         <input type="hidden" name="discount" value="{{ $product->discount }}">
@@ -451,10 +458,9 @@
                                         <input type="hidden" name="quantity" value="1">
                                         <input type="hidden" name="description" value="{{ $product->description }}">
                                         <input type="hidden" name="photo" value="{{ $product->photo->first()?->getUrl() ?? 'default.png' }}">
-
                                         <button type="submit" class="msv-add-cart">
                                             <i class="fa-solid fa-cart-plus"></i> Add to Cart
-                                        </button>
+                                        </button>@else<a class="msv-add-cart text-center" href="{{ url('product-detail/'.$product->id) }}">Select vehicle</a>@endif
                                     </form>
                                 </div>
                             </div>
@@ -502,6 +508,7 @@
                             </div>
                         @endif
                     @endforeach
+                    @endif
 
                 </div>
             </div>

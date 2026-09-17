@@ -124,6 +124,12 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'mi
     Route::post('product-categories/media', 'ProductCategoryController@storeMedia')->name('product-categories.storeMedia');
     Route::post('product-categories/ckmedia', 'ProductCategoryController@storeCKEditorImages')->name('product-categories.storeCKEditorImages');
     Route::resource('product-categories', 'ProductCategoryController');
+    Route::delete('sub-categories/destroy', 'SubCategoryController@massDestroy')->name('sub-categories.massDestroy');
+    Route::post('sub-categories/media', 'SubCategoryController@storeMedia')->name('sub-categories.storeMedia');
+    Route::post('sub-categories/ckmedia', 'SubCategoryController@storeCKEditorImages')->name('sub-categories.storeCKEditorImages');
+    Route::resource('sub-categories', 'SubCategoryController');
+    Route::resource('vehicles', 'VehicleController')->except('show');
+    Route::resource('offers', 'OfferController');
 
     // Product Tag
     Route::delete('product-tags/destroy', 'ProductTagController@massDestroy')->name('product-tags.massDestroy');
@@ -222,6 +228,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'mi
     // Wallet Request
     Route::delete('wallet-requests/destroy', 'WalletRequestController@massDestroy')->name('wallet-requests.massDestroy');
     Route::resource('wallet-requests', 'WalletRequestController');
+    Route::get('wallet-statement', 'WalletRequestController@statement')->name('wallet.statement');
 
     // Audit Logs
     Route::resource('audit-logs', 'AuditLogsController', ['except' => ['create', 'store', 'edit', 'update', 'destroy']]);
@@ -478,6 +485,7 @@ Route::group(['as' => 'frontend.', 'namespace' => 'Frontend', 'middleware' => ['
     // Wallet Request
     Route::delete('wallet-requests/destroy', 'WalletRequestController@massDestroy')->name('wallet-requests.massDestroy');
     Route::resource('wallet-requests', 'WalletRequestController');
+    Route::get('wallet-statement', 'WalletRequestController@statement')->name('wallet.statement');
 
     // Asset Category
     Route::delete('asset-categories/destroy', 'AssetCategoryController@massDestroy')->name('asset-categories.massDestroy');
@@ -669,9 +677,9 @@ Route::group(['middleware' => ['auth:web,customer']], function () {
 });
 
 
-Route::get('/wishlist',[App\Http\Controllers\Custom\wishlistController::class, 'index'])->name('custom.wishlist');
+Route::get('/wishlist',[WishlistController::class, 'index'])->name('custom.wishlist');
 
-Route::post('/wishlist/store', [App\Http\Controllers\Custom\wishlistController::class, 'store'])->name('wishlist.store');
+Route::post('/wishlist/store', [WishlistController::class, 'store'])->name('wishlist.store');
 
 Route::get('/orders/search', [App\Http\Controllers\Custom\CheckOrderController::class, 'searchOrder'])->name('orders.search');
 

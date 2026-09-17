@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Custom;
 
 use App\Http\Controllers\Controller;
+use App\Models\Product;
 use Illuminate\Http\Request;
 
 class CartController extends Controller
@@ -21,24 +22,32 @@ class CartController extends Controller
     $cart = session()->get('cart', []);
 
     $productId = $request->id;
+    $catalogProduct = Product::findOrFail($productId);
+    $selection = \App\Services\CatalogFitments::selection($catalogProduct, $request->input('fitment_id'), $request->input('category_id'));
+    $cartKey = $productId . ':' . ($selection['fitment_id'] ?? 'c'.$selection['category_id']);
+    $rolePrice = $catalogProduct->sellingPrice();
     $product = [
         'id' => $productId,
-        'name' => $request->name,
-        'price' => $request->price,
-        'discount' => $request->discount ?? 0, // Ensure discount is always set
-        'price_1' => $request->price_1 ?? null,
+        'name' => $catalogProduct->name,
+        'item_code' => $catalogProduct->item_code,
+        'price' => $catalogProduct->mrp(),
+        'final_price' => $rolePrice,
+        'discount' => $catalogProduct->discount ?? 0,
+        'price_1' => $catalogProduct->price_1,
         'quantity' => 1,
-        'description' => $request->description,
+        'description' => $catalogProduct->description,
         'photo' => $request->photo ?? asset('default.png'),
-        'gst' => $request->gst,
-        'rate_2' => $request->rate_2 ?? null,
+        'gst' => $catalogProduct->gst,
+        'rate_2' => $catalogProduct->rate_2,
     ];
 
+    $product = array_merge($product, $selection, ['cart_key' => $cartKey]);
+
     // If the product is already in cart, just update the quantity
-    if (isset($cart[$productId])) {
-        $cart[$productId]['quantity'] += 1;
+    if (isset($cart[$cartKey])) {
+        $cart[$cartKey]['quantity'] += 1;
     } else {
-        $cart[$productId] = $product;
+        $cart[$cartKey] = $product;
     }
 
     session()->put('cart', $cart);
@@ -48,6 +57,7 @@ class CartController extends Controller
     
 public function updateQuantity(Request $request)
 {
+    $request->validate(['id' => ['required'], 'quantity' => ['required', 'integer', 'min:1', 'max:999']]);
     $cart = session('cart', []);
     $productId = $request->input('id');
     $updatedQuantity = $request->input('quantity');
@@ -56,7 +66,10 @@ public function updateQuantity(Request $request)
         if ($updatedQuantity > 0) {
             $cart[$productId]['quantity'] = $updatedQuantity;
             session(['cart' => $cart]);
-            return response()->json(['success' => true, 'quantity' => $updatedQuantity]);
+            $mrpTotal = collect($cart)->sum(fn ($item) => (float) ($item['price'] ?? 0) * (int) ($item['quantity'] ?? 1));
+            $payableTotal = collect($cart)->sum(fn ($item) => (float) ($item['final_price'] ?? $item['price_1'] ?? $item['price'] ?? 0) * (int) ($item['quantity'] ?? 1));
+            $linePrice = (float) ($cart[$productId]['final_price'] ?? $cart[$productId]['price_1'] ?? $cart[$productId]['price'] ?? 0);
+            return response()->json(['success' => true, 'quantity' => $updatedQuantity, 'line_total' => round($linePrice * $updatedQuantity, 2), 'mrp_total' => round($mrpTotal, 2), 'payable_total' => round($payableTotal, 2)]);
         } else {
             return response()->json(['success' => false, 'message' => 'Quantity must be greater than zero.']);
         }

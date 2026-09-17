@@ -1,4 +1,7 @@
 @extends('layouts.admin')
+@php
+    $routePrefix = $routePrefix ?? 'admin.product-categories';
+@endphp
 @section('content')
 <div class="content">
 
@@ -11,7 +14,7 @@
                 <div class="panel-body">
                     <div class="form-group">
                         <div class="form-group">
-                            <a class="btn btn-default" href="{{ route('admin.product-categories.index') }}">
+                            <a class="btn btn-default" href="{{ route($routePrefix . '.index') }}">
                                 {{ trans('global.back_to_list') }}
                             </a>
                         </div>
@@ -33,6 +36,18 @@
                                         {{ $productCategory->name }}
                                     </td>
                                 </tr>
+                                @if(! ($isSubCategory ?? false))
+                                <tr>
+                                    <th>Sub Categories</th>
+                                    <td>
+                                        @forelse($productCategory->subcategories as $subCategory)
+                                            <span class="label label-info">{{ $subCategory->name }}</span><p>{{ $subCategory->vehicles->pluck('name')->implode(', ') }}</p>
+                                        @empty
+                                            <span class="text-muted">No sub categories</span>
+                                        @endforelse
+                                    </td>
+                                </tr>
+                                @endif
                                 <tr>
                                     <th>
                                         {{ trans('cruds.productCategory.fields.description') }}
@@ -56,7 +71,7 @@
                             </tbody>
                         </table>
                         <div class="form-group">
-                            <a class="btn btn-default" href="{{ route('admin.product-categories.index') }}">
+                            <a class="btn btn-default" href="{{ route($routePrefix . '.index') }}">
                                 {{ trans('global.back_to_list') }}
                             </a>
                         </div>

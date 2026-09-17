@@ -1,6 +1,8 @@
 @extends('layouts.frontend')
 
-@section('content')
+@section('frontend-content')
+<style>.pending-work{background:#f5f7fb;padding:32px 0;min-height:60vh}.pending-work .panel{border:0;border-radius:15px;box-shadow:0 10px 26px rgba(18,34,56,.07);overflow:hidden}.pending-work .panel-heading{background:#172b49;color:#fff;padding:19px 22px;font:800 21px 'Barlow Condensed',sans-serif}.pending-work .panel-body{padding:0}.pending-work th{font-size:11px;text-transform:uppercase;color:#718096;letter-spacing:.05em}.pending-work th,.pending-work td{padding:14px!important;vertical-align:middle!important;border-color:#edf1f5!important}</style>
+<section class="pending-work"><div class="container">
 <div class="content">
     <div class="row">
         <div class="col-lg-12">
@@ -50,7 +52,7 @@
             </div>
         </div>
     </div>
-</div>
+</div></div></section>
 @endsection
 
 @section('scripts')

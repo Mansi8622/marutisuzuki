@@ -21,7 +21,7 @@ class ProductCategoryController extends Controller
     {
         abort_if(Gate::denies('product_category_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        $productCategories = ProductCategory::with(['media'])->get();
+        $productCategories = ProductCategory::where('is_subcategory', false)->with(['media', 'subcategories.vehicles', 'parent'])->orderBy('name')->get();
 
         return view('admin.productCategories.index', compact('productCategories'));
     }
@@ -30,12 +30,19 @@ class ProductCategoryController extends Controller
     {
         abort_if(Gate::denies('product_category_create'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        return view('admin.productCategories.create');
+        $parents = ProductCategory::orderBy('name')->get();
+
+        return view('admin.productCategories.create', compact('parents'));
     }
 
     public function store(StoreProductCategoryRequest $request)
     {
-        $productCategory = ProductCategory::create($request->all());
+        $data = $request->validated();
+        $data['is_subcategory'] = false;
+        $data['parent_id'] = null;
+        $data['has_subcategories'] = $request->boolean('has_subcategories');
+        $productCategory = ProductCategory::create($data);
+        $productCategory->subcategories()->sync($data['has_subcategories'] ? $request->input('subcategories', []) : []);
 
         if ($request->input('photo', false)) {
             $productCategory->addMedia(storage_path('tmp/uploads/' . basename($request->input('photo'))))->toMediaCollection('photo');
@@ -52,12 +59,19 @@ class ProductCategoryController extends Controller
     {
         abort_if(Gate::denies('product_category_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        return view('admin.productCategories.edit', compact('productCategory'));
+        $parents = ProductCategory::whereKeyNot($productCategory->id)->orderBy('name')->get();
+        return view('admin.productCategories.edit', compact('productCategory', 'parents'));
     }
 
     public function update(UpdateProductCategoryRequest $request, ProductCategory $productCategory)
     {
-        $productCategory->update($request->all());
+        $data = $request->validated();
+        abort_if(isset($data['parent_id']) && (int) $data['parent_id'] === $productCategory->id, Response::HTTP_UNPROCESSABLE_ENTITY);
+        $data['is_subcategory'] = false;
+        $data['parent_id'] = null;
+        $data['has_subcategories'] = $request->boolean('has_subcategories');
+        $productCategory->update($data);
+        $productCategory->subcategories()->sync($data['has_subcategories'] ? $request->input('subcategories', []) : []);
 
         if ($request->input('photo', false)) {
             if (! $productCategory->photo || $request->input('photo') !== $productCategory->photo->file_name) {
@@ -76,6 +90,8 @@ class ProductCategoryController extends Controller
     public function show(ProductCategory $productCategory)
     {
         abort_if(Gate::denies('product_category_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        $productCategory->load('children');
 
         return view('admin.productCategories.show', compact('productCategory'));
     }

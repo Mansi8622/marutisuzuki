@@ -726,8 +726,17 @@ class PermissionsTableSeeder extends Seeder
                 'id'    => 179,
                 'title' => 'profile_password_edit',
             ],
+            ['title' => 'sub_category_create'],
+            ['title' => 'sub_category_edit'],
+            ['title' => 'sub_category_show'],
+            ['title' => 'sub_category_delete'],
+            ['title' => 'sub_category_access'],
         ];
 
-        Permission::insert($permissions);
+        // This seeder is also run against existing installations.  Do not use
+        // insert() with generator-era fixed IDs: it fails on the second run.
+        foreach ($permissions as $permission) {
+            Permission::firstOrCreate(['title' => $permission['title']]);
+        }
     }
 }

@@ -1,4 +1,8 @@
 @extends('layouts.admin')
+@php
+    $isSubCategory = $isSubCategory ?? false;
+    $routePrefix = $routePrefix ?? 'admin.product-categories';
+@endphp
 @section('content')
 <div class="content">
 
@@ -9,7 +13,7 @@
                     {{ trans('global.edit') }} {{ trans('cruds.productCategory.title_singular') }}
                 </div>
                 <div class="panel-body">
-                    <form method="POST" action="{{ route("admin.product-categories.update", [$productCategory->id]) }}" enctype="multipart/form-data">
+                    <form method="POST" action="{{ route($routePrefix . '.update', [$productCategory->id]) }}" enctype="multipart/form-data">
                         @method('PUT')
                         @csrf
                         <div class="form-group {{ $errors->has('name') ? 'has-error' : '' }}">
@@ -28,6 +32,7 @@
                             @endif
                             <span class="help-block">{{ trans('cruds.productCategory.fields.description_helper') }}</span>
                         </div>
+                        @include('admin.productCategories.companies')
                         <div class="form-group {{ $errors->has('photo') ? 'has-error' : '' }}">
                             <label for="photo">{{ trans('cruds.productCategory.fields.photo') }}</label>
                             <div class="needsclick dropzone" id="photo-dropzone">
@@ -56,7 +61,7 @@
 @section('scripts')
 <script>
     Dropzone.options.photoDropzone = {
-    url: '{{ route('admin.product-categories.storeMedia') }}',
+    url: '{{ route($routePrefix . '.storeMedia') }}',
     maxFilesize: 2, // MB
     acceptedFiles: '.jpeg,.jpg,.png,.gif',
     maxFiles: 1,

@@ -85,6 +85,21 @@ class Product extends Model implements HasMedia
         return $this->belongsToMany(CheckOrder::class);
     }
 
+    public function fitments()
+    {
+        return $this->hasMany(ProductFitment::class);
+    }
+
+    public function availableFitments()
+    {
+        return $this->fitments()->with(['category', 'vehicle.subcategory'])
+            ->whereHas('category', fn ($q) => $q->where('is_subcategory', false)->where('has_subcategories', true))
+            ->whereHas('vehicle.subcategory')->get()->filter(function ($fitment) {
+                return $this->categories->contains($fitment->category_id)
+                    && $fitment->category->subcategories()->whereKey($fitment->vehicle->subcategory_id)->exists();
+            });
+    }
+
     public function categories()
     {
         return $this->belongsToMany(ProductCategory::class);
@@ -162,6 +177,23 @@ public function our_stocks()
 {
     return $this->hasMany(OurStock::class, 'select_product_id');
 }
+
+    public function sellingPrice(): float
+    {
+        if (auth('customer')->check()) return (float) ($this->rate_2 ?? $this->price);
+        if (auth('web')->check()) return (float) ($this->price_1 ?? $this->price);
+        return (float) $this->price - ((float) $this->price * (float) $this->discount / 100);
+    }
+
+    public function mrp(): float
+    {
+        return (float) $this->price;
+    }
+
+    public function isInStock(): bool
+    {
+        return (int) optional($this->ourStock)->quantity_available > 0;
+    }
 
     // FOC / scheme slabs — e.g. Slab 1: Buy 15, Free 1
     public function focSlabs()

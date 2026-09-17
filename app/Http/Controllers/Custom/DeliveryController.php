@@ -9,6 +9,7 @@ use App\Models\Address;
 use App\Models\User;
 use App\Models\Customer;
 use App\Models\WalletRequest;
+use App\Models\Offer;
 
 class DeliveryController extends Controller
 {
@@ -65,17 +66,28 @@ class DeliveryController extends Controller
             $user = null; // No authenticated user
         }
     
+        // Credit line belongs to the user, not to their address.  Address may be
+        // incomplete during checkout, but an approved credit line must still work.
+        $wallet = $user && Auth::guard('web')->check()
+            ? WalletRequest::where('vendor_id', $user->id)->latest()->first()
+            : null;
+
         if ($user && $user->address) {
             // Now you can safely use pluck() if the address exists
             $addressIds = $user->address->pluck('id');
-            $wallet = WalletRequest::where('vendor_id', $user->id)->first();
         } else {
             // Handle case where there is no address
             $addressIds = null;
-            $wallet = null;
         }
     
-        return view('custom.delivery', compact('user', 'cartItems', 'orderSummary', 'wallet'));
+        // Offers are deliberately sent only to the online-payment flow. Credit
+        // line orders must always use their full invoice amount.
+        $offers = Offer::available()
+            ->where('minimum_order_amount', '<=', $finalPrice)
+            ->orderByDesc('discount_percent')
+            ->get();
+
+        return view('custom.delivery', compact('user', 'cartItems', 'orderSummary', 'wallet', 'offers'));
     }
     
    

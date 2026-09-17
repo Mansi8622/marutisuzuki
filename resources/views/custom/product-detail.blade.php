@@ -10,8 +10,8 @@
     $img1Url    = optional($products->product_photo_2->first())->getUrl() ?? $noImagePlaceholder;
     $img2Url    = optional($products->product_photo_3)->getUrl() ?? $noImagePlaceholder;
 
-    $finalPrice = $products->price - ($products->price * $products->discount / 100);
-    $savings    = $products->price - $finalPrice;
+    $finalPrice = $products->sellingPrice();
+    $savings    = $products->mrp() - $finalPrice;
 @endphp
 
 <style>
@@ -210,7 +210,7 @@
 
             <!-- Product Details Section -->
             <div class="col-lg-6 ps-lg-5">
-                <h3 class="pd-title text-capitalize">{{ $products->name }}</h3>
+                <h3 class="pd-title text-capitalize">{{ $products->name }}</h3>@include('custom.partials.product-selection', ['selectionProduct' => $products])
 
                 {{-- Rating badge: only shows if your Product model has rating / reviews_count fields --}}
                 @if(isset($products->rating) && $products->rating)
@@ -230,12 +230,12 @@
                     @if (Auth::guard('web')->check())
                         <div class="pd-price-row">
                             <span class="cur">₹{{ number_format($products->price_1, 0) }}</span>
-                            <del>MRP ₹{{ number_format($finalPrice, 0) }}</del>
+                            <del>MRP ₹{{ number_format($products->mrp(), 0) }}</del>
                         </div>
                     @elseif (Auth::guard('customer')->check())
                         <div class="pd-price-row">
                             <span class="cur">₹{{ number_format($products->rate_2, 0) }}</span>
-                            <del>MRP ₹{{ number_format($finalPrice, 0) }}</del>
+                            <del>MRP ₹{{ number_format($products->mrp(), 0) }}</del>
                         </div>
                     @else
                         <div class="pd-price-row">

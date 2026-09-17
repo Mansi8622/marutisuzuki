@@ -90,10 +90,49 @@ public function store(Request $request)
     }
 
     $user = Auth::guard('web')->user();
+    // Price, GST and invoice total are calculated from the catalogue here. The
+    // browser fields are only a product/quantity selection and are never used
+    // as a source of money values.
+    $requestedQuantities = [];
+    foreach ($validated['product'] as $index => $productId) {
+        $requestedQuantities[$productId] = ($requestedQuantities[$productId] ?? 0)
+            + (int) ($validated['product_quantity'][$index] ?? 0);
+    }
+
+    $catalogue = Product::whereIn('id', array_keys($requestedQuantities))->get()->keyBy('id');
+    if ($catalogue->count() !== count($requestedQuantities)) {
+        return back()->withErrors(['product' => 'One or more products are no longer available.']);
+    }
+
+    $orderLines = [];
+    $totalAmount = 0;
+    foreach ($requestedQuantities as $productId => $quantity) {
+        $product = $catalogue[$productId];
+        $unitPrice = $product->sellingPrice();
+        $lineTotal = round($unitPrice * $quantity * (1 + ((float) ($product->gst ?? 0) / 100)), 2);
+        $totalAmount += $lineTotal;
+        $orderLines[$productId] = [
+            'id' => $product->id,
+            'name' => $product->name,
+            'selections' => \App\Services\CatalogFitments::orderSelections($product, $quantity),
+            'item_code' => $product->item_code,
+            'quantity' => $quantity,
+            'unit_price' => $unitPrice,
+            'gst' => (float) ($product->gst ?? 0),
+            'line_total' => $lineTotal,
+        ];
+    }
+    $totalAmount = round($totalAmount, 2);
+
     $walletRequest = WalletRequest::where('vendor_id', $user->id)->first();
 
-    if (!$walletRequest) {
-        return redirect()->back()->with('error', 'No wallet found for user.');
+    if ($validated['payment_method'] === 'Credit Line') {
+        if (!$walletRequest || $walletRequest->status !== 'Active') {
+            return redirect()->back()->with('error', 'Your credit line is not active. Please apply and wait for admin approval.');
+        }
+        if ((float) $walletRequest->welcome_amount < $totalAmount) {
+            return redirect()->back()->with('error', 'Insufficient available credit for this order.');
+        }
     }
 
     // CHECK IF USER HAS USED WALLET BEFORE
@@ -106,7 +145,14 @@ public function store(Request $request)
     // PROCESS ORDER PLACEMENT
     DB::beginTransaction();
     try {
-        $totalAmount = $validated['total_amount'];
+        if ($validated['payment_method'] === 'Credit Line') {
+            // Re-read under a row lock so simultaneous checkouts cannot spend
+            // the same available credit twice.
+            $walletRequest = WalletRequest::where('vendor_id', $user->id)->lockForUpdate()->first();
+            if (! $walletRequest || $walletRequest->status !== 'Active' || (float) $walletRequest->welcome_amount < $totalAmount) {
+                throw new \RuntimeException('Credit line balance changed. Please review the payment method and try again.');
+            }
+        }
 
         // CREATE ORDER
         $orderNumber = 'ORD' . strtoupper(substr(uniqid(), 0, 5)) . rand(10000, 99999);
@@ -119,7 +165,7 @@ public function store(Request $request)
         $checkOrder->order_number = $orderNumber;
         $checkOrder->total_amount = $totalAmount;
         $checkOrder->payment_method = $validated['payment_method'];
-        $checkOrder->products = json_encode($validated['products']);
+        $checkOrder->products = json_encode($orderLines);
         $checkOrder->payment_status = 'confirm';
         $checkOrder->shipping_address = json_encode([
             'country' => $validated['country'],
@@ -141,32 +187,21 @@ public function store(Request $request)
         $checkOrder->save();
 
         // ATTACH PRODUCTS
-        foreach ($validated['product'] as $index => $productId) {
-            $product = Product::find($productId);
-            if ($product) {
-                $quantity = $validated['product_quantity'][$index];
-                $checkOrder->select_products()->attach($product, ['quantity' => $quantity]);
-            }
+        foreach ($requestedQuantities as $productId => $quantity) {
+            $checkOrder->select_products()->attach($productId, ['quantity' => $quantity]);
         }
 
-        // DEDUCT FROM WALLET
-        $walletRequest->welcome_amount -= $totalAmount;
-        $walletRequest->save();
-
-        // ADD TRANSACTION RECORD
-        Transaction::create([
-            'vendor_id' => $user->id,
-            'transaction_type' => 'purchase',
-            'request_amount' => $totalAmount,
-            'created_by_id' => $user->id,
-            'status' => 'success',
-            'order_number'=>$orderNumber,
-        ]);
-
-        // UPDATE DUE AMOUNT IN WALLET
-        $walletRequest->update([
-            'due' => $walletRequest->due + $totalAmount
-        ]);
+        if ($validated['payment_method'] === 'Credit Line') {
+            // A credit purchase creates an immutable invoice-linked debit in the ledger.
+            $walletRequest->decrement('welcome_amount', $totalAmount);
+            $walletRequest->increment('due', $totalAmount);
+            Transaction::create([
+                'vendor_id' => $user->id, 'order_id' => $checkOrder->id, 'order_number' => $orderNumber,
+                'transaction_id' => 'CREDIT-' . strtoupper(uniqid()), 'transaction_type' => 'purchase',
+                'request_amount' => $totalAmount, 'paid_amount' => 0, 'total_amount' => $totalAmount,
+                'created_by_id' => $user->id, 'status' => 'success',
+            ]);
+        }
 
         session()->forget('cart');
         DB::commit();

@@ -1,6 +1,6 @@
 @php
     use App\Models\ProductCategory;
-    $categories = ProductCategory::orderBy('name')->get(); // Sorted alphabetically
+    $categories = ProductCategory::with('subcategories.vehicles')->where('is_subcategory', false)->orderBy('name')->get();
 @endphp
 
 <!DOCTYPE html>
@@ -102,7 +102,7 @@ nav.navbar{
   position: relative;
   /* The live-search panel must extend beyond the navbar, above the category bar. */
   overflow: visible;
-  z-index: 1050;
+  /* z-index: 1050; */
 }
 /* subtle scanning sweep across the navbar on load, like a fitting-check pass */
 nav.navbar::before{
@@ -295,6 +295,9 @@ nav.navbar::before{
 }
 .header3 .dropdown-item:hover{ background: var(--navy-3); padding-left:.85rem; }
 .header3 .dropdown-item img{ border:1px solid var(--line); }
+.vehicle-submenu{display:none}.company-with-vehicles:hover>.vehicle-submenu,.company-with-vehicles:focus-within>.vehicle-submenu{display:block}.header3 .category-submenu{ display:none; border-left:2px solid var(--orange); margin-left:1rem!important; }
+.header3 .category-with-children:hover .category-submenu,
+.header3 .category-with-children:focus-within .category-submenu{ display:block; }
 
 /* ================= TRUST STRIP (layout-level, appears on every page) ================= */
 .trust-strip{
@@ -549,7 +552,7 @@ footer.footer ul.d-flex i:hover{ background: var(--orange); color: var(--navy); 
           </div>
           <ul class="dropdown-menu">
             @foreach($categories as $category)
-              <li>
+              <li class="category-with-children">
                 <a href="{{ route('category.products', $category->id) }}" class="dropdown-item text-dark d-flex align-items-center">
                   @if($category->photo)
                     <img src="{{ $category->photo->preview }}" alt="{{ $category->name }}" style="width:25px;height:25px;object-fit:cover;" class="me-2 rounded">
@@ -558,6 +561,15 @@ footer.footer ul.d-flex i:hover{ background: var(--orange); color: var(--navy); 
                   @endif
                   {{ $category->name }}
                 </a>
+                @if($category->subcategories->isNotEmpty())
+                  <ul class="list-unstyled ms-4 mb-1 category-submenu">
+                    @foreach($category->subcategories as $subCategory)
+                      <li class="company-with-vehicles"><a href="{{ route('category.products', ['id' => $category->id, 'subcategory' => $subCategory->id]) }}" class="dropdown-item small"><i class="fa-solid fa-angle-right me-1"></i>{{ $subCategory->name }}</a><ul class="vehicle-submenu list-unstyled ms-3">
+@foreach($subCategory->vehicles as $navVehicle)<li><a class="dropdown-item small" href="{{ route('category.products', ['id' => $category->id, 'subcategory' => $subCategory->id, 'vehicle' => $navVehicle->id]) }}">{{ $navVehicle->name }}</a></li>@endforeach
+</ul></li>
+                    @endforeach
+                  </ul>
+                @endif
               </li>
             @endforeach
           </ul>

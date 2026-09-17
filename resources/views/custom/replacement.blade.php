@@ -3,6 +3,7 @@
     @section('content')
 
     <style>
+            .dashboard{background:#f5f7fb}.replacement{background:#fff;border:1px solid #e5ebf3;border-radius:15px;box-shadow:0 10px 26px rgba(18,34,56,.06);padding:14px}.replacement h4{font:800 25px 'Barlow Condensed',sans-serif;color:#13243d}.replacement .table{border-radius:10px;overflow:hidden}.replacement .table thead{background:#172b49;color:#fff}.replacement .table th{border:0!important;font-size:11px;text-transform:uppercase;letter-spacing:.05em;padding:14px}.replacement .table td{vertical-align:middle;padding:13px;border-color:#edf1f5}.replacement .table tbody tr:hover{background:#f7f9ff}.replacement .primary-bg{background:#3566e8!important;border-radius:7px;font-weight:700}
             /* Custom Modal Width */
             @media (min-width: 768px) {
                 .modal-dialog {

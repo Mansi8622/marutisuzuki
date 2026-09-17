@@ -28,11 +28,34 @@ class ProductCategory extends Model implements HasMedia
 
     protected $fillable = [
         'name',
+        'parent_id',
+        'has_subcategories',
+        'is_subcategory',
         'description',
         'created_at',
         'updated_at',
         'deleted_at',
     ];
+
+    public function subcategories()
+    {
+        return $this->belongsToMany(self::class, 'category_subcategory', 'category_id', 'subcategory_id')->where('is_subcategory', true)->orderBy('name');
+    }
+
+    public function vehicles()
+    {
+        return $this->hasMany(Vehicle::class, 'subcategory_id')->orderBy('name');
+    }
+
+    public function parent()
+    {
+        return $this->belongsTo(self::class, 'parent_id');
+    }
+
+    public function children()
+    {
+        return $this->hasMany(self::class, 'parent_id')->orderBy('name');
+    }
 
     protected function serializeDate(DateTimeInterface $date)
     {

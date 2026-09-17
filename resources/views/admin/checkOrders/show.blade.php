@@ -8,7 +8,7 @@
                 <div class="panel-heading">
                     {{ trans('global.show') }} {{ trans('cruds.checkOrder.title') }}
                 </div>
-                <div class="panel-body">
+                <div class="panel-body">@include('custom.partials.order-selections', ['selectionOrder' => $checkOrder])
                     <div class="form-group">
                         <div class="form-group">
                             <a class="btn btn-default" href="{{ route('admin.check-orders.index') }}">

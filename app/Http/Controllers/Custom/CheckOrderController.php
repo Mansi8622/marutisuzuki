@@ -320,6 +320,7 @@ public function downloadInvoice($orderNumber)
     $order = CheckOrder::with(['select_customer', 'select_user', 'select_products'])
                 ->where('order_number', $orderNumber)
                 ->firstOrFail();
+    $this->ensureOwner($order);
                
 
     // Rest of the code remains the same
@@ -329,6 +330,44 @@ public function downloadInvoice($orderNumber)
     $pdf = PDF::loadView('custom.invoiceorder', compact('order', 'customerName', 'userName'));
 
     return $pdf->download('invoice_' . $order->order_number . '.pdf');
+}
+
+public function show(CheckOrder $order)
+{
+    $this->ensureOwner($order);
+    $order->load('select_products', 'carrier');
+    return view('custom.order-show', compact('order'));
+}
+
+public function edit(CheckOrder $order)
+{
+    $this->ensureOwner($order);
+    abort_unless(strtolower($order->order_status) === 'pending', 403, 'Only pending orders can be updated.');
+    return view('custom.order-edit', compact('order'));
+}
+
+public function updateDelivery(Request $request, CheckOrder $order)
+{
+    $this->ensureOwner($order);
+    abort_unless(strtolower($order->order_status) === 'pending', 403, 'Only pending orders can be updated.');
+    $data = $request->validate([
+        'contact_name' => ['required', 'string', 'max:120'],
+        'contact_phone' => ['required', 'string', 'max:30'],
+        'contact_email' => ['nullable', 'email', 'max:160'],
+        'country' => ['nullable', 'string', 'max:100'], 'state' => ['nullable', 'string', 'max:100'],
+        'district' => ['nullable', 'string', 'max:100'], 'full_address' => ['required', 'string', 'max:1000'],
+    ]);
+    $address = json_decode($order->shipping_address, true) ?: [];
+    $order->shipping_address = json_encode(array_merge($address, $data));
+    $order->save();
+    return redirect()->route('frontend.orders.show', $order)->with('success', 'Delivery address and contact details updated. Items and payment were not changed.');
+}
+
+private function ensureOwner(CheckOrder $order): void
+{
+    $allowed = (Auth::guard('web')->check() && (int) $order->select_user_id === (int) Auth::guard('web')->id())
+        || (Auth::guard('customer')->check() && (int) $order->select_customer_id === (int) Auth::guard('customer')->id());
+    abort_unless($allowed, 403);
 }
 
 public function pendingOrders()

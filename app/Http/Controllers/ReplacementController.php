@@ -26,7 +26,10 @@ class ReplacementController extends Controller
             $orders = collect();
         }
 
-        $replacements = Replacement::all();
+        $replacements = Replacement::with(['company', 'product', 'checkOrder'])
+            ->when($userId, fn ($query) => $query->where('user_id', $userId))
+            ->when($customerId, fn ($query) => $query->where('customer_id', $customerId))
+            ->latest()->get();
 
         return view('custom.replacement', compact('orders', 'replacements'));
     }
@@ -278,6 +281,7 @@ class ReplacementController extends Controller
     public function generateReplacementInvoice($id)
     {
         $replacement = Replacement::with(['company', 'product', 'checkOrder', 'user', 'customer'])->findOrFail($id);
+        $this->ensureReplacementOwner($replacement);
     
         $pdfOptions = new Options();
         $pdfOptions->set('isHtml5ParserEnabled', true);
@@ -294,6 +298,35 @@ class ReplacementController extends Controller
     
         // Stream the generated PDF (force download)
         return $dompdf->stream('replacement-invoice.pdf', ['Attachment' => 1]);
+    }
+
+    public function customerShow(Replacement $replacement)
+    {
+        $this->ensureReplacementOwner($replacement);
+        return view('custom.replacement-show', compact('replacement'));
+    }
+
+    public function customerEdit(Replacement $replacement)
+    {
+        $this->ensureReplacementOwner($replacement);
+        abort_unless(strtolower($replacement->status ?? 'pending') === 'pending', 403, 'Only pending replacement requests can be updated.');
+        return view('custom.replacement-edit', compact('replacement'));
+    }
+
+    public function customerUpdate(Request $request, Replacement $replacement)
+    {
+        $this->ensureReplacementOwner($replacement);
+        abort_unless(strtolower($replacement->status ?? 'pending') === 'pending', 403, 'Only pending replacement requests can be updated.');
+        $data = $request->validate(['customer_name' => ['required','string','max:120'], 'customer_phone' => ['required','string','max:30'], 'customer_email' => ['nullable','email','max:160'], 'customer_notes' => ['nullable','string','max:1000']]);
+        $replacement->update($data);
+        return redirect()->route('frontend.customer-replacements.show', $replacement)->with('success', 'Replacement contact details updated. Product and quantity were not changed.');
+    }
+
+    private function ensureReplacementOwner(Replacement $replacement): void
+    {
+        $allowed = (Auth::guard('web')->check() && (int) $replacement->user_id === (int) Auth::guard('web')->id())
+            || (Auth::guard('customer')->check() && (int) $replacement->customer_id === (int) Auth::guard('customer')->id());
+        abort_unless($allowed, 403);
     }
     
     

@@ -616,12 +616,18 @@ Route::prefix('frontend')->name('frontend.')->group(function () {
 
     // 🛒 User Orders
     Route::get('/customer-orders', [CheckOrderController::class, 'index'])->name('customer-orders.index');
+    Route::get('/orders/{order}', [CheckOrderController::class, 'show'])->name('orders.show');
+    Route::get('/orders/{order}/edit', [CheckOrderController::class, 'edit'])->name('orders.edit');
+    Route::put('/orders/{order}', [CheckOrderController::class, 'updateDelivery'])->name('orders.update');
     Route::post('/store/orders', [CheckOrderController::class, 'store'])->name('order.store');
     Route::patch('/orders/cancel/{order}', [CheckOrderController::class, 'cancelOrder'])->name('orders.cancel');
 
     // 🔁 Replacement Requests
     Route::post('/replacement/store', [ReplacementController::class, 'store'])->name('replacement.store');
     Route::get('/customer-replacements', [ReplacementController::class, 'index'])->name('customer-replacements.index');
+    Route::get('/customer-replacements/{replacement}', [ReplacementController::class, 'customerShow'])->name('customer-replacements.show');
+    Route::get('/customer-replacements/{replacement}/edit', [ReplacementController::class, 'customerEdit'])->name('customer-replacements.edit');
+    Route::put('/customer-replacements/{replacement}', [ReplacementController::class, 'customerUpdate'])->name('customer-replacements.update');
     Route::get('/order-details/{id}', [ReplacementController::class, 'getOrderDetails'])->name('order.details');
 
     // 🏢 Company Replacement Management

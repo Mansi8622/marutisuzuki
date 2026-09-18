@@ -90,12 +90,33 @@
 
 .msv-cat-list li{ border-bottom:1px dashed #e1e8ef; }
 .msv-cat-list li:last-child{ border-bottom:0; }
+.msv-cat-list .category-menu-item{ position:relative; }
 .msv-cat-list .dropdown-item{
   padding:.6rem .3rem; font-size:.92rem; color:#26333f !important;
   display:flex; align-items:center; border-radius:2px; transition:color .15s, padding-left .15s;
 }
 .msv-cat-list .dropdown-item:hover{ background:transparent; color:var(--orange-dk) !important; padding-left:.5rem; }
 .msv-cat-list .dropdown-item i.fallback{ color:var(--orange); width:25px; text-align:center; }
+.msv-category-icon{
+  width:32px; height:32px; flex:0 0 32px; display:inline-flex; align-items:center; justify-content:center;
+  border-radius:9px; background:#eef5fb; color:var(--blueprint); margin-right:.65rem;
+}
+.msv-category-icon img{ width:22px; height:22px; object-fit:contain; }
+.msv-category-arrow{ margin-left:auto; font-size:.7rem; color:var(--steel); transition:transform .18s ease; }
+.msv-subcategory-menu{
+  display:none; position:absolute; z-index:20; left:calc(100% - 8px); top:0; min-width:210px;
+  padding:.45rem; margin:0; list-style:none; border:1px solid #dce7f0; border-radius:10px;
+  background:#fff; box-shadow:0 14px 30px rgba(16,32,48,.15);
+}
+.msv-subcategory-menu a{ display:block; padding:.55rem .65rem; border-radius:6px; color:#354554; font-size:.82rem; text-decoration:none; }
+.msv-subcategory-menu a:hover{ background:#fff1ea; color:var(--orange-dk); }
+.msv-cat-list .category-menu-item:hover .msv-subcategory-menu,
+.msv-cat-list .category-menu-item:focus-within .msv-subcategory-menu{ display:block; }
+.msv-cat-list .category-menu-item:hover .msv-category-arrow,
+.msv-cat-list .category-menu-item:focus-within .msv-category-arrow{ transform:rotate(90deg); color:var(--orange); }
+@media (max-width: 991.98px){
+  .msv-subcategory-menu{ position:static; min-width:0; margin:0 0 .35rem 2.8rem; box-shadow:none; border:0; border-left:2px solid #f3c8b5; border-radius:0; }
+}
 
 /* ---------------------------------------------------------
    Product card — Flipkart / Amazon look
@@ -331,20 +352,36 @@
                 <div class="msv-filter-card px-3 py-3 fit-frame">
                     <ul class="list-unstyled msv-cat-list">
                         @foreach($categories as $sidebarCategory)
-                            <li>
+                            @php
+                                $categoryIcon = match (true) {
+                                    str_contains(strtolower($sidebarCategory->name), 'android') => 'fa-mobile-screen-button',
+                                    str_contains(strtolower($sidebarCategory->name), 'camera'), str_contains(strtolower($sidebarCategory->name), 'dash') => 'fa-camera',
+                                    str_contains(strtolower($sidebarCategory->name), 'horn') => 'fa-bullhorn',
+                                    str_contains(strtolower($sidebarCategory->name), 'light') => 'fa-lightbulb',
+                                    str_contains(strtolower($sidebarCategory->name), 'speaker'), str_contains(strtolower($sidebarCategory->name), 'fm') => 'fa-volume-high',
+                                    str_contains(strtolower($sidebarCategory->name), 'visor') => 'fa-car-side',
+                                    str_contains(strtolower($sidebarCategory->name), 'mud'), str_contains(strtolower($sidebarCategory->name), 'mat') => 'fa-shoe-prints',
+                                    default => 'fa-gear',
+                                };
+                            @endphp
+                            <li class="category-menu-item">
                                 <a href="{{ route('category.products', $sidebarCategory->id) }}"
                                    class="dropdown-item text-dark d-flex align-items-center">
                                     @if($sidebarCategory->photo)
-                                        <img src="{{ $sidebarCategory->photo->preview }}" alt="{{ $sidebarCategory->name }}"
-                                             style="width: 25px; height: 25px; object-fit: cover;" class="me-2 rounded">
+                                        <span class="msv-category-icon"><img src="{{ $sidebarCategory->photo->preview }}" alt=""></span>
                                     @else
-                                        <i class="fa-solid fa-gear me-2 fallback"></i>
+                                        <span class="msv-category-icon"><i class="fa-solid {{ $categoryIcon }}"></i></span>
                                     @endif
                                     {{ $sidebarCategory->name }}
+                                    @if($sidebarCategory->subcategories->isNotEmpty())<i class="fa-solid fa-chevron-right msv-category-arrow"></i>@endif
                                 </a>
-                                @foreach($sidebarCategory->subcategories as $subCategory)
-                                  <a href="{{ route('category.products', ['id' => $sidebarCategory->id, 'subcategory' => $subCategory->id]) }}" class="dropdown-item text-muted small ps-5"><i class="fa-solid fa-angle-right me-2"></i>{{ $subCategory->name }}</a>
-                                @endforeach
+                                @if($sidebarCategory->subcategories->isNotEmpty())
+                                    <ul class="msv-subcategory-menu">
+                                        @foreach($sidebarCategory->subcategories as $subCategory)
+                                            <li><a href="{{ route('category.products', ['id' => $sidebarCategory->id, 'subcategory' => $subCategory->id]) }}"><i class="fa-solid fa-angle-right me-2"></i>{{ $subCategory->name }}</a></li>
+                                        @endforeach
+                                    </ul>
+                                @endif
                             </li>
                         @endforeach
                     </ul>
@@ -445,7 +482,7 @@
                                 </a>
 
                                 <div class="px-3 pb-3">
-                                    @if(isset($selectedVehicle))
+                                    @if(!isset($selectedCategory) || !$selectedCategory->has_subcategories || isset($selectedVehicle))
                                     <form action="{{ route('cart.add') }}" method="POST" class="msv-actions">
                                         @csrf
                                         <input type="hidden" name="id" value="{{ $product->id }}">
@@ -464,7 +501,7 @@
                                         </button>
                                     </form>
                                     @else
-                                        <a class="msv-add-cart text-center" href="{{ url('product-detail/'.$product->id) }}">Select vehicle</a>
+                                        <a class="msv-add-cart text-center" href="{{ url('product-detail/'.$product->id).'?'.http_build_query(['category' => $selectedCategory->id]) }}"><i class="fa-solid fa-car-side"></i> Select vehicle</a>
                                     @endif
                                 </div>
                             </div>

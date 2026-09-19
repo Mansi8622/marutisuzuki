@@ -49,6 +49,16 @@
               </div>
               <div class="row">
               <div class="col-12 mt-3 text-md-end ">
+                <a href="{{ route('downloads.selector', 'price-list') }}" class="decoration text-white">
+                  <div class="btn primary-bg text-white px-5 py-2 mb-3">
+                    Download Price List
+                  </div>
+                </a>
+                <a href="{{ route('downloads.selector', 'catalog') }}" class="decoration text-white">
+                  <div class="btn primary-bg text-white px-5 py-2 mb-3">
+                    Download Catalogs
+                  </div>
+                </a>
                 <a href="" class="decoration text-white ">   <div class="btn primary-bg text-white px-5 py-2 mb-3">
                   Verify Account 
                 </div></a>

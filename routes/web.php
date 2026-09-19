@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\TransactionController;
 use App\Http\Controllers\Custom\CheckOrderController;
 use App\Http\Controllers\Custom\DeliveryController;
 use App\Http\Controllers\CustomerAuthController;
+use App\Http\Controllers\CatalogDownloadController;
 use App\Models\StockTransfer;
 use App\Http\Controllers\ReplacementController;
 use App\Http\Controllers\WalletController;
@@ -680,6 +681,8 @@ Route::delete('/cart/delete', [App\Http\Controllers\Custom\CartController::class
 Route::group(['middleware' => ['auth:web,customer']], function () {
     Route::get('/delivery', [App\Http\Controllers\Custom\DeliveryController::class, 'index'])->name('custom.delivery');
     Route::post('/delivery/store', [App\Http\Controllers\Custom\DeliveryController::class, 'store'])->name('custom.delivery.store');
+    Route::get('/downloads/{type}', [CatalogDownloadController::class, 'selector'])->name('downloads.selector');
+    Route::post('/downloads/{type}', [CatalogDownloadController::class, 'download'])->name('downloads.generate');
 });
 
 
@@ -693,8 +696,4 @@ Route::get('/replacement/invoice/{id}', [App\Http\Controllers\ReplacementControl
 
 
 
-Route::get('/download-invoice/{id}', function ($id) {
-    $order = Replacement::findOrFail($id);
-    $pdf = Pdf::loadView('custom.invoice', compact('order'));
-    return $pdf->download('custom.invoice-' . $order->order_number . '.pdf');
-});
+Route::get('/download-invoice/{id}', [App\Http\Controllers\ReplacementController::class, 'generateReplacementInvoice']);

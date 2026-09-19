@@ -1,0 +1,10 @@
+@extends('custom.master')
+
+@section('content')
+<style>.dashboard{background:#f5f7fb}.panel{background:#fff;border:1px solid #e4ebf3;border-radius:14px;box-shadow:0 12px 28px rgba(18,34,56,.07);padding:20px}.panel h1{font:800 30px 'Barlow Condensed',sans-serif;color:#13243d}.meta{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.meta div{background:#f8fafc;border:1px solid #edf1f5;border-radius:10px;padding:12px}.meta small{display:block;color:#718096;text-transform:uppercase;font-weight:800;font-size:.68rem}@media(max-width:768px){.meta{grid-template-columns:1fr}}</style>
+<section class="dashboard py-5"><div class="container"><div class="row">@include('custom.sidebar')<div class="col-lg-9"><div class="panel">
+  <div class="d-flex justify-content-between gap-3 flex-wrap mb-3"><div><h1>Replacement {{ $replacement->order_number }}</h1><p class="text-muted mb-0">Replacement invoice details. Amount is intentionally hidden.</p></div><div><a href="{{ route('frontend.customer-replacements.index') }}" class="btn btn-outline-secondary"><i class="fa-solid fa-arrow-left me-1"></i>Back</a> @if(strtolower($replacement->status ?? 'pending') === 'pending')<a href="{{ route('frontend.customer-replacements.edit', $replacement) }}" class="btn btn-warning"><i class="fa-regular fa-pen-to-square me-1"></i>Edit</a>@endif <a href="{{ route('replacement.invoice', $replacement->id) }}" class="btn btn-danger"><i class="fa-regular fa-file-pdf me-1"></i>PDF</a></div></div>
+  <div class="meta mb-4"><div><small>Product</small><b>{{ $replacement->product->name ?? 'N/A' }}</b></div><div><small>Quantity</small><b>{{ $replacement->quantity }}</b></div><div><small>Status</small><b>{{ ucfirst($replacement->status ?? 'Pending') }}</b></div></div>
+  <h5>Contact</h5><p>{{ $replacement->customer_name }}<br>{{ $replacement->customer_phone }} {{ $replacement->customer_email ? ' · '.$replacement->customer_email : '' }}</p><h5>Issue</h5><p>{{ $replacement->issues ?? 'N/A' }}</p><h5>Notes</h5><p>{{ $replacement->customer_notes ?? $replacement->notes ?? 'N/A' }}</p>
+</div></div></div></div></section>
+@endsection

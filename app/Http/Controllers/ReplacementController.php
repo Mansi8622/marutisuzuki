@@ -16,7 +16,9 @@ class ReplacementController extends Controller
 
     public function index()
     {
-        
+        $userId = Auth::guard('web')->check() ? Auth::id() : null;
+        $customerId = Auth::guard('customer')->check() ? Auth::guard('customer')->id() : null;
+
         // Logged-in user ke hisaab se orders fetch karenge
         if (Auth::guard('web')->check()) {
             $orders = CheckOrder::where('select_user_id', Auth::id())->get();
@@ -288,7 +290,7 @@ class ReplacementController extends Controller
         $pdfOptions->set('isPhpEnabled', true);
     
         $dompdf = new Dompdf($pdfOptions);
-        $dompdf->loadHtml(view('pdf.replacement-invoice', compact('replacement'))->render());
+        $dompdf->loadHtml(view('custom.replacement-invoice', compact('replacement'))->render());
     
         // (Optional) Set paper size
         $dompdf->setPaper('A4', 'portrait');
@@ -298,6 +300,11 @@ class ReplacementController extends Controller
     
         // Stream the generated PDF (force download)
         return $dompdf->stream('replacement-invoice.pdf', ['Attachment' => 1]);
+    }
+
+    public function downloadInvoice($id)
+    {
+        return $this->generateReplacementInvoice($id);
     }
 
     public function customerShow(Replacement $replacement)
@@ -326,6 +333,15 @@ class ReplacementController extends Controller
     {
         $allowed = (Auth::guard('web')->check() && (int) $replacement->user_id === (int) Auth::guard('web')->id())
             || (Auth::guard('customer')->check() && (int) $replacement->customer_id === (int) Auth::guard('customer')->id());
+
+        if (! $allowed && Auth::guard('web')->check()) {
+            $user = Auth::guard('web')->user();
+            if ($user && $user->roles()->where('title', 'Company')->exists()) {
+                $company = AddCompany::where('company_name', $user->business_name)->first();
+                $allowed = $company && (int) $replacement->company_id === (int) $company->id;
+            }
+        }
+
         abort_unless($allowed, 403);
     }
     

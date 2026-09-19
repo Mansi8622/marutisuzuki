@@ -1,137 +1,56 @@
 @extends('custom.master')
 
 @section('content')
-
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css">
+<style>
+.dashboard{background:#f5f7fb}.work-card{background:#fff;border:1px solid #e4ebf3;border-radius:14px;box-shadow:0 12px 28px rgba(18,34,56,.07);padding:18px}.page-head h1{font:800 30px 'Barlow Condensed',sans-serif;color:#13243d;margin:0}.page-head p{color:#718096;margin:0 0 16px}.table thead{background:#172b49;color:#fff}.table th{border:0!important;font-size:11px;text-transform:uppercase;letter-spacing:.05em;padding:14px!important}.table td{padding:13px 12px!important;vertical-align:middle;border-color:#edf1f5!important}.prod{display:flex;align-items:center;gap:12px}.prod img{width:58px;height:58px;object-fit:contain;border:1px solid #e5ebf3;border-radius:9px;background:#f8fafc}.prod b{display:block;color:#13243d}.prod small{color:#718096}.stock{background:#e8faf1;color:#087f5b;border-radius:999px;padding:6px 10px;font-weight:800;font-size:.72rem}.action-row{display:flex;gap:7px}.icon-btn{width:34px;height:34px;border-radius:8px;display:inline-grid;place-items:center;border:1px solid #dbe4ef;background:#fff;color:#172b49}.icon-btn:hover{background:#eef4ff;color:#2454b9}.icon-btn.cart{color:#0b7285}.icon-btn.delete{color:#c92a2a}.dataTables_wrapper .dataTables_filter input,.dataTables_wrapper .dataTables_length select{border:1px solid #dbe4ef;border-radius:8px;padding:6px 10px}
+</style>
 <section class="dashboard py-5">
-    <div class="container">
-        <div class="row">
-           @include('custom.sidebar')
-
-            <div class="col-lg-9 mb-3">
-              <h1 class="mb-4">My Wishlist</h1>
-
-              <!-- laptop size -->
-              <div class="card px-5 py-3 d-lg-block d-none">
-                <div class="row">
-                    <div class="col-12 pb-3">
-                        <div class="row">
-                            <div class="col-2"> Product Name</div>
-                            <div class="col-2">Description</div>
-                            <div class="col-2">Price</div>
-                            <div class="col-2">Stock</div>
-                            <div class="col-2">Images</div>
-                            <div class="col-2">Options</div>
-                        </div>
-                    </div>
-
-                    <!-- Loop through wishlist items -->
-                    @foreach($wishlists as $wishlist)
-                    <div class="col-12">
-                        <div class="row py-3" style="border-top: 1px solid #D7D7D7; display: flex; align-items: center;">
-                            <div class="col-2">
-                                {{ $wishlist->product->name ?? '' }}
-                            </div>
-                            <div class="col-2">
-                                {{ $wishlist->product->description ?? '' }}
-                            </div>
-                            <div class="col-2">
-                                @if($wishlist->product)
-                                    ₹{{ Auth::guard('web')->check() 
-                                        ? $wishlist->product->price_1 ?? '' 
-                                        : ($wishlist->product->price - ($wishlist->product->price * $wishlist->product->discount / 100))  
-                                    }}
-                                @else
-                                    <span class="text-danger">Product not found</span>
-                                @endif
-                            </div>
-                            
-                            <div class="col-2">
-                                In Stock
-                            </div>
-                            <div class="col-2">
-                                @if($wishlist->product && $wishlist->product->photo && $wishlist->product->photo->first())
-                                    <img src="{{ $wishlist->product->photo->first()->getUrl() }}" alt="Product Image" class="img-fluid">
-                                @else
-                                    <img src="{{ asset('images/default-product.png') }}" alt="No Image" class="img-fluid">
-                                @endif
-                            </div>
-                            
-                            <div class="col-2 d-flex justify-content-between">
-                                <!-- Delete Button -->
-                                <button class="btn delete-wishlist" data-id="{{ $wishlist->id }}" style="width: 40px; height: 40px; border-radius: 100%; background-color: #E06563; color: white;">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                                
-                                <!-- Add to Cart Button -->
-                                <form action="{{ route('frontend.wishlist.move') }}" method="POST">
-                                    @if($wishlist->product)
-                                    <input type="hidden" name="id" value="{{ $wishlist->product->id ?? '' }}">
-                                    <input type="hidden" name="name" value="{{ $wishlist->product->name ?? '' }}">
-                                    <input type="hidden" name="price" value="{{ $wishlist->product->price ?? '' }}">
-                                    <input type="hidden" name="discount" value="{{ $wishlist->product->discount ?? '' }}">
-                                    <input type="hidden" name="price_1" value="{{ $wishlist->product->price_1 ?? '' }}">
-                                    <input type="hidden" name="quantity" value="{{ $wishlist->product->quantity ?? '' }}">
-                                    <input type="hidden" name="description" value="{{ $wishlist->product->description ?? '' }}">
-                                    <input type="hidden" name="photo" value="{{ $wishlist->product->photo->first()?->getUrl() ?? '' }}">
-                                @else
-                                    {{-- Optionally show a message or skip rendering --}}
-                                @endif
-                                
-                                
-                                    <div class="card">
-                       
-        
-                                        <div class="text-center p-0">
-                                            
-                                            
-                                            <button class="btn add-to-cart" data-id="{{ $wishlist->product->id ?? ''}}" style="width: 40px; height: 40px; border-radius: 100%; background-color: #FF9E66; color: white;">
-                                                <i class="fas fa-shopping-cart"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </form>
-
-                            </div>
-                        </div>
-                    </div>
-                    @endforeach
-                </div>
-              </div>
-
-            </div>
+  <div class="container">
+    <div class="row">
+      @include('custom.sidebar')
+      <div class="col-lg-9 mb-3">
+        <div class="work-card">
+          <div class="page-head"><h1>My Wishlist</h1><p>Saved products with quick cart and remove actions.</p></div>
+          <div class="table-responsive">
+            <table class="table table-hover align-middle datatable-wishlist w-100">
+              <thead><tr><th>Product</th><th>Description</th><th>Price</th><th>Stock</th><th>Actions</th></tr></thead>
+              <tbody>
+                @foreach($wishlists as $wishlist)
+                  @php
+                    $product = $wishlist->product;
+                    $price = $product ? (Auth::guard('web')->check() ? ($product->price_1 ?? $product->price) : ($product->price - ($product->price * $product->discount / 100))) : 0;
+                  @endphp
+                  <tr>
+                    <td><div class="prod"><img src="{{ $product?->photo?->first()?->getUrl() ?? asset('images/default-product.png') }}" alt="{{ $product->name ?? 'Product' }}"><div><b>{{ $product->name ?? 'Product not found' }}</b><small>{{ $product->item_code ?? '' }}</small></div></div></td>
+                    <td>{{ \Illuminate\Support\Str::limit($product->description ?? 'N/A', 80) }}</td>
+                    <td>Rs {{ number_format((float) $price, 2) }}</td>
+                    <td><span class="stock"><i class="fa-solid fa-box me-1"></i>In stock</span></td>
+                    <td>
+                      <div class="action-row">
+                        @if($product)
+                          <form action="{{ route('frontend.wishlist.move') }}" method="POST">@csrf
+                            <input type="hidden" name="id" value="{{ $product->id }}"><input type="hidden" name="name" value="{{ $product->name }}"><input type="hidden" name="price" value="{{ $product->price }}"><input type="hidden" name="discount" value="{{ $product->discount }}"><input type="hidden" name="price_1" value="{{ $product->price_1 }}"><input type="hidden" name="quantity" value="1"><input type="hidden" name="description" value="{{ $product->description }}"><input type="hidden" name="photo" value="{{ $product->photo->first()?->getUrl() ?? '' }}">
+                            <button class="icon-btn cart" title="Move to cart"><i class="fa-solid fa-cart-plus"></i></button>
+                          </form>
+                        @endif
+                        <button class="icon-btn delete delete-wishlist" data-id="{{ $wishlist->id }}" title="Remove"><i class="fa-regular fa-trash-can"></i></button>
+                      </div>
+                    </td>
+                  </tr>
+                @endforeach
+              </tbody>
+            </table>
+          </div>
         </div>
+      </div>
     </div>
+  </div>
 </section>
-
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        // Wishlist delete function
-        document.querySelectorAll('.delete-wishlist').forEach(button => {
-            button.addEventListener('click', function() {
-                let wishlistId = this.getAttribute('data-id');
-                
-                if(confirm("Are you sure you want to delete this item from your wishlist?")) {
-                    fetch(`/wishlist/${wishlistId}/delete`, {
-                        method: 'DELETE',
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            'Content-Type': 'application/json'
-                        }
-                    }).then(response => response.json())
-                      .then(data => {
-                          if(data.success) {
-                              alert("Wishlist item deleted successfully!");
-                              location.reload();
-                          } else {
-                              alert("Error deleting wishlist item.");
-                          }
-                      });
-                }
-            });
-        });
-
-        
-    });
+$(function(){ $('.datatable-wishlist').DataTable({ pageLength:5, lengthMenu:[[5,10,25,50],[5,10,25,50]] }); $('.delete-wishlist').on('click', function(){ if(!confirm('Remove this product from wishlist?')) return; fetch(`/wishlist/${this.dataset.id}/delete`, { method:'DELETE', headers:{ 'X-CSRF-TOKEN':'{{ csrf_token() }}', 'Content-Type':'application/json' } }).then(r=>r.json()).then(d=>{ if(d.success) location.reload(); else alert('Unable to remove item.'); }); }); });
 </script>
-
 @endsection

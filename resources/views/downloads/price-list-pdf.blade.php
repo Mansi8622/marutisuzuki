@@ -20,7 +20,7 @@
         $cur = '₹';
 
         // Ek page me left + right column, har column me itni rows (row height fixed 20pt hai)
-        $rowsPerCol = 13;
+        $rowsPerCol = 12;
         $perPage    = $rowsPerCol * 2;
         $lh         = 7.6; // ek text line ki height (pt)
 
@@ -173,7 +173,7 @@
         $gHeader = $glass(814, 64, 12);
         $gBadge  = $glass(200, 54, 9, null, 0.85);
         $gBand   = $glass(814, 17, 8);
-        $gTable  = $glass(396, 296, 10);
+        $gTable  = $glass(396, 274, 10);
         $gStrip  = $glass(802, 58, 10);
         $gAbout  = $glass(500, 46, 10, $orange);
         $gCta    = $glass(802, 46, 12);
@@ -210,14 +210,18 @@
         $nameLH   = $nameLen <= 8 ? 30 : ($nameLen <= 11 ? 25 : ($nameLen <= 13 ? 21 : 17));
 
         // ---------- Brand column tabhi dikhao jab kisi product me brand ho ----------
-        $brandOf  = fn($p) => optional($p->select_companies->first())->name ?? optional($p->companies->first())->name ?? '-';
+        $brandOf  = fn($p) => optional($p->select_companies->first())->company_name
+            ?? optional($p->companies->first())->company_name
+            ?? optional($p->select_companies->first())->name
+            ?? optional($p->companies->first())->name
+            ?? '-';
         $hasBrand = $products->contains(fn($p) => $brandOf($p) !== '-');
 
         // ---------- Column widths (total = 396pt) ----------
         if ($isCustomer) {
-            $cw = ['sl' => 16, 'part' => 60, 'brand' => $hasBrand ? 50 : 0, 'cat' => 56, 'mrp' => 44, 'sale' => 54];
+            $cw = ['sl' => 16, 'part' => 58, 'brand' => $hasBrand ? 54 : 0, 'cat' => 54, 'mrp' => 42, 'sale' => 54];
         } else {
-            $cw = ['sl' => 14, 'part' => 52, 'brand' => $hasBrand ? 40 : 0, 'cat' => 44, 'mrp' => 34, 'sale' => 42, 'foc' => 24];
+            $cw = ['sl' => 14, 'part' => 52, 'brand' => $hasBrand ? 44 : 0, 'cat' => 38, 'mrp' => 34, 'sale' => 42, 'foc' => 24];
         }
         $fixedW = array_sum($cw) + (!$isCustomer ? 48 : 0); // foc: 3 cols = 72 (24 upar already count hua)
         $cw['desc'] = 396 - $fixedW;
@@ -253,20 +257,20 @@
 
         /* ---- Table (glass card upar se piche alag image me hai) ---- */
         table.tb { width: 396pt; border-collapse: separate; border-spacing: 0; table-layout: fixed; }
-        table.tb th { background: #1f6fd0; color: #ffffff; font-size: 5.8pt; letter-spacing: 0.3pt; text-transform: uppercase; text-align: center; padding: 1pt 2pt; height: 15pt; border-left: 0.5pt solid #5b97e0; }
+        table.tb th { background: #1f6fd0; color: #ffffff; font-size: 5.4pt; letter-spacing: 0.2pt; text-transform: uppercase; text-align: center; padding: 1pt 1.5pt; height: 14pt; border-left: 0.5pt solid #5b97e0; overflow: hidden; }
         table.tb th.h-sale { background: #f7941d; border-left: 0.5pt solid #f7941d; }
         table.tb th.h-foc { background: #0e9f8e; border-left: 0.5pt solid #0e9f8e; }
         table.tb th.h-foc2 { background: #14b8a6; border-left: 0.5pt solid #0e9f8e; }
-        table.tb td { height: 20pt; padding: 1pt 3pt; font-size: 6.3pt; line-height: 1.2; border-bottom: 0.5pt solid #d6e5f3; vertical-align: middle; color: #0d2b5e; overflow: hidden; }
+        table.tb td { height: 20pt; padding: 1pt 2.2pt; font-size: 5.8pt; line-height: 1.12; border-bottom: 0.5pt solid #d6e5f3; vertical-align: middle; color: #0d2b5e; overflow: hidden; }
         table.tb tr.alt td { background: #eaf3fc; }
         .clip { overflow: hidden; }
         .c { text-align: center; }
         .sl { font-weight: bold; text-align: center; }
         .pn { font-weight: bold; color: #1e78d6; white-space: nowrap; }
-        .pname { font-size: 6.5pt; font-weight: bold; color: #0d2b5e; line-height: 1.17; }
-        .psub { font-size: 5.6pt; color: #5b6f84; line-height: 1.17; }
+        .pname { font-size: 6pt; font-weight: bold; color: #0d2b5e; line-height: 1.1; }
+        .psub { font-size: 5.2pt; color: #5b6f84; line-height: 1.1; }
         .mrp { color: #4a5b6c; white-space: nowrap; text-align: center; }
-        .sale { background: #f7941d; color: #ffffff; font-weight: bold; padding: 2.5pt 4pt; border-radius: 3pt; display: inline-block; white-space: nowrap; }
+        .sale { background: #f7941d; color: #ffffff; font-weight: bold; padding: 2pt 3pt; border-radius: 3pt; display: inline-block; white-space: nowrap; }
         .foc { color: #087f3f; text-align: center; white-space: nowrap; }
         .ok { color: #087f3f; font-weight: bold; text-align: center; white-space: nowrap; }
         .na { color: #e5322d; font-weight: bold; text-align: center; }
@@ -327,7 +331,7 @@
         @foreach($cols as $ci => $colItems)
             @if($colItems->count())
                 @php $tx = $ci ? 436 : 20; @endphp
-                <img class="abs" src="{{ $gTable }}" style="top:104pt;left:{{ $tx }}pt;width:396pt;height:296pt;">
+                <img class="abs" src="{{ $gTable }}" style="top:104pt;left:{{ $tx }}pt;width:396pt;height:274pt;">
                 <div class="abs" style="top:106pt;left:{{ $tx }}pt;width:396pt;">
                     <table class="tb" cellspacing="0" cellpadding="0">
                         <colgroup>

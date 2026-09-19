@@ -132,13 +132,13 @@
         .toc .ct { font-size: 8pt; color: #657382; }
         .toc .pg { text-align: right; font-size: 11pt; font-weight: bold; color: #ff8a00; width: 60pt; }
 
-        .grid { border-collapse: separate; border-spacing: 7pt; width: 467pt; table-layout: fixed; }
+        .grid { border-collapse: separate; border-spacing: 6pt; width: 467pt; table-layout: fixed; }
         .grid td { vertical-align: top; padding: 0; }
-        .pcard { height: 190pt; border: 0.75pt solid #d7e6f1; border-radius: 8pt; padding: 6pt 7pt; background: #ffffff; }
-        .pimg { height: 96pt; background: #f2f8fd; border-radius: 6pt; text-align: center; margin-top: 4pt; }
-        .pname { font-size: 9.5pt; font-weight: bold; color: #0a2a5e; margin-top: 7pt; line-height: 1.25; height: 24pt; }
-        .pcode { display: inline-block; background: #0b78b7; color: #ffffff; font-size: 7.5pt; font-weight: bold; padding: 2pt 7pt; border-radius: 8pt; margin: 3pt 0 4pt; }
-        .pmeta { font-size: 7pt; color: #657382; line-height: 1.5; }
+        .pcard { height: 178pt; border: 0.75pt solid #d7e6f1; border-radius: 8pt; padding: 5pt 7pt; background: #ffffff; overflow: hidden; }
+        .pimg { height: 82pt; background: #f2f8fd; border-radius: 6pt; text-align: center; margin-top: 4pt; overflow: hidden; }
+        .pname { font-size: 8.8pt; font-weight: bold; color: #0a2a5e; margin-top: 6pt; line-height: 1.18; height: 22pt; overflow: hidden; }
+        .pcode { display: inline-block; background: #0b78b7; color: #ffffff; font-size: 6.8pt; font-weight: bold; padding: 2pt 6pt; border-radius: 8pt; margin: 2pt 0 3pt; max-width: 122pt; overflow: hidden; }
+        .pmeta { font-size: 6.3pt; color: #657382; line-height: 1.32; height: 32pt; overflow: hidden; }
         .pmeta b { color: #0a2a5e; }
 
         .foot-txt { font-size: 7.5pt; color: #657382; }
@@ -332,7 +332,7 @@
         </div>
 
         {{-- Product grid 3 x 3 --}}
-        <div class="abs" style="top:92pt;left:{{ $cl - 7 }}pt;">
+        <div class="abs" style="top:92pt;left:{{ $cl - 6 }}pt;">
             <table class="grid" cellspacing="0" cellpadding="0">
                 @foreach($pg['items']->pad(9, null)->chunk(3) as $row)
                     <tr>
@@ -345,23 +345,23 @@
                                         $vehicle  = optional($product->fitments->first())->vehicle;
                                         $photo    = $product->photo->first();
                                         $path     = $photo ? $photo->getPath() : null;
-                                        [$iw, $ih] = $fit($path, 124, 86);
+                                        [$iw, $ih] = $fit($path, 122, 74);
                                     @endphp
                                     <div class="pcard">
                                         <img src="{{ $bar }}" style="width:100%;height:3pt;">
                                         <div class="pimg">
                                             @if($photo)
-                                                <img src="{{ $path }}" style="width:{{ $iw }}pt;height:{{ $ih }}pt;margin-top:{{ round((96 - $ih) / 2, 1) }}pt;">
+                                                <img src="{{ $path }}" style="width:{{ $iw }}pt;height:{{ $ih }}pt;margin-top:{{ round((82 - $ih) / 2, 1) }}pt;">
                                             @else
-                                                <div style="line-height:96pt;color:#9aa6b2;font-size:8pt;">No Image</div>
+                                                <div style="line-height:82pt;color:#9aa6b2;font-size:8pt;">No Image</div>
                                             @endif
                                         </div>
-                                        <div class="pname">{{ mb_strimwidth($product->name, 0, 44, '...') }}</div>
-                                        <span class="pcode">CODE: {{ $product->item_code ?? '-' }}</span>
+                                        <div class="pname">{{ mb_strimwidth($product->name, 0, 38, '...') }}</div>
+                                        <span class="pcode">CODE: {{ mb_strimwidth($product->item_code ?? '-', 0, 18, '...') }}</span>
                                         <div class="pmeta">
-                                            <b>Category:</b> {{ mb_strimwidth($category->name ?? '-', 0, 24, '...') }}<br>
-                                            @if($sub)<b>Sub:</b> {{ mb_strimwidth($sub->name, 0, 26, '...') }}<br>@endif
-                                            @if($vehicle)<b>Vehicle:</b> {{ mb_strimwidth($vehicle->name, 0, 24, '...') }}@endif
+                                            <b>Category:</b> {{ mb_strimwidth($category->name ?? '-', 0, 22, '...') }}<br>
+                                            @if($sub)<b>Sub:</b> {{ mb_strimwidth($sub->name, 0, 22, '...') }}<br>@endif
+                                            @if($vehicle)<b>Vehicle:</b> {{ mb_strimwidth($vehicle->name, 0, 22, '...') }}@endif
                                         </div>
                                     </div>
                                 @endif

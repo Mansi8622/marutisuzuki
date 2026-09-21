@@ -10,6 +10,16 @@
 
     $noImagePlaceholder = 'data:image/svg+xml;utf8,' . rawurlencode('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400"><rect width="400" height="400" fill="#F5F7FA"/><g fill="#C7CFD6"><rect x="130" y="140" width="140" height="110" rx="6" fill="none" stroke="#C7CFD6" stroke-width="6"/><circle cx="165" cy="175" r="14"/><path d="M130 235 L180 190 L215 220 L245 195 L270 235 Z"/></g><text x="200" y="285" font-family="Arial, sans-serif" font-size="16" fill="#9AA7B3" text-anchor="middle">No Image</text></svg>');
 
+    // Current logged-in user ke wishlist product IDs (heart ko refresh ke baad bhi red dikhane ke liye)
+    $wishlistProductIds = [];
+    if (Auth::guard('customer')->check()) {
+        $wishlistProductIds = \App\Models\Wishlist::where('customer_id', Auth::guard('customer')->user()->id)
+                                ->pluck('product_id')->toArray();
+    } elseif (Auth::guard('web')->check()) {
+        $wishlistProductIds = \App\Models\Wishlist::where('user_id', Auth::guard('web')->user()->id)
+                                ->pluck('product_id')->toArray();
+    }
+
 @endphp
 
 <style>
@@ -255,16 +265,14 @@
 /* wishlist heart, top-right, like Flipkart/Amazon listing */
 
 .msv-wish{
-
   position:absolute; top:8px; right:8px; z-index:3;
-
   width:28px; height:28px; border-radius:50%; background:#fff;
-
   border:1px solid #e6edf3; display:flex; align-items:center; justify-content:center;
-
   color:#9aa7b3; font-size:.85rem; box-shadow:0 1px 4px rgba(16,32,48,.08);
-
+  cursor:pointer;
 }
+.msv-wish.active{ background:#FF5A1F; border-color:#FF5A1F; }
+.msv-wish.active i{ color:#fff; }
 
 .msv-tag{
 
@@ -699,6 +707,7 @@
                         @endforeach
 
                     </ul>
+                    
 
                 </div>
 
@@ -769,7 +778,10 @@
 
                                  style="animation-delay: {{ ($loop->index % 6) * 0.08 }}s;">
 
-                                <span class="msv-wish"><i class="fa-regular fa-heart"></i></span>
+                                                              @php $isWishlisted = in_array($product->id, $wishlistProductIds); @endphp
+                               <span class="msv-wish {{ $isWishlisted ? 'active' : '' }}" onclick="toggleWishlist(event, {{ $product->id }})">
+                                    <i class="fa-{{ $isWishlisted ? 'solid' : 'regular' }} fa-heart" id="wish-icon-{{ $product->id }}"></i>
+                                </span>
 
                                 <a href="{{ url('product-detail/'.$product->id).'?'.http_build_query(['category' => $selectedCategory->id ?? null, 'subcategory' => $selectedCompany->id ?? null, 'vehicle' => $selectedVehicle->id ?? null]) }}" class="decoration">
 
@@ -1025,5 +1037,45 @@
     </div>
 
 </section>
+<script>
+function toggleWishlist(event, productId) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const icon = document.getElementById('wish-icon-' + productId);
+    const wrapper = icon.closest('.msv-wish');
+    const url = "{{ url('/add-to-wishlist') }}/" + productId;
+
+    fetch(url, {
+        method: "POST",
+        headers: {
+            "X-CSRF-TOKEN": "{{ csrf_token() }}",
+            "Accept": "application/json"
+        }
+    })
+    .then(res => {
+        if (res.status === 401) {
+            alert("Please login to add items to your wishlist.");
+            return null;
+        }
+        return res.json();
+    })
+    .then(data => {
+        if (!data) return;
+        if (data.status === 'added') {
+            wrapper.classList.add('active');
+            icon.classList.remove('fa-regular');
+            icon.classList.add('fa-solid');
+        } else if (data.status === 'removed') {
+            wrapper.classList.remove('active');
+            icon.classList.remove('fa-solid');
+            icon.classList.add('fa-regular');
+        } else if (data.error) {
+            alert(data.error);
+        }
+    })
+    .catch(err => console.error('Wishlist error:', err));
+}
+</script>
 
 @endsection

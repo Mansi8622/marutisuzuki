@@ -548,7 +548,9 @@ Route::group(['as' => 'frontend.', 'namespace' => 'Frontend', 'middleware' => ['
 
     // wishlist
     Route::get('frontend/wishlist',[WishlistController::class,'index'])->name('wishlist');
-    Route::post('/add-to-wishlist/{productId}', [WishlistController::class, 'addToWishlist'])->name('wishlist.add');
+    Route::post('/add-to-wishlist/{productId}', [WishlistController::class, 'addToWishlist'])
+    ->middleware(['auth:web,customer'])
+    ->name('wishlist.add');    
     Route::delete('/wishlist/{id}/delete', [WishlistController::class, 'destroy'])->name('wishlist.delete');
     Route::post('/wishlist/add', [WishlistController::class, 'addToCart'])->name('wishlist.move');
     // end wishlist

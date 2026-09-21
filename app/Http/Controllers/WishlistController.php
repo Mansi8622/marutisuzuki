@@ -34,44 +34,41 @@ class WishlistController extends Controller
     }
     // Function to add product to wishlist
     public function addToWishlist($productId)
-    {
-        // Check if user is logged in via either customer or web guard
-        if (!Auth::guard('customer')->check() && !Auth::guard('web')->check()) {
-            // User is not logged in, show popup
-            return response()->json(['login_required' => true], 401);
-        }
-
-        // Determine the currently logged-in user
-        $user = Auth::guard('customer')->check() ? Auth::guard('customer')->user() : Auth::guard('web')->user();
-        $product = Product::find($productId);
-
-        // Check if product exists
-        if (!$product) {
-            return response()->json(['error' => 'Product not found'], 404);
-        }
-
-        // Handle adding product to wishlist based on the guard
-        try {
-            if (Auth::guard('customer')->check()) {
-                // Customer guard - store customer_id
-                Wishlist::create([
-                    'customer_id' => $user->id,
-                    'product_id' => $product->id,
-                ]);
-            } elseif (Auth::guard('web')->check()) {
-                // Web guard - store user_id
-                Wishlist::create([
-                    'user_id' => $user->id,
-                    'product_id' => $product->id,
-                ]);
+        {
+            if (!Auth::guard('customer')->check() && !Auth::guard('web')->check()) {
+                return response()->json(['login_required' => true], 401);
             }
 
-            return response()->json(['success' => 'Product added to wishlist']);
-        } catch (\Exception $e) {
-            // Catch any errors and return them
-            return response()->json(['error' => $e->getMessage()], 500);
+            $product = Product::find($productId);
+            if (!$product) {
+                return response()->json(['error' => 'Product not found'], 404);
+            }
+
+            $guardField = Auth::guard('customer')->check() ? 'customer_id' : 'user_id';
+            $userId = Auth::guard('customer')->check()
+                ? Auth::guard('customer')->user()->id
+                : Auth::guard('web')->user()->id;
+
+            try {
+                $existing = Wishlist::where($guardField, $userId)
+                                ->where('product_id', $product->id)
+                                ->first();
+
+                if ($existing) {
+                    $existing->delete();
+                    return response()->json(['status' => 'removed']);
+                }
+
+                Wishlist::create([
+                    $guardField => $userId,
+                    'product_id' => $product->id,
+                ]);
+
+                return response()->json(['status' => 'added']);
+            } catch (\Exception $e) {
+                return response()->json(['error' => $e->getMessage()], 500);
+            }
         }
-    }
     public function destroy($id)
     {
         $wishlist = Wishlist::find($id);

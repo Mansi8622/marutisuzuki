@@ -173,7 +173,7 @@
         $gHeader = $glass(814, 64, 12);
         $gBadge  = $glass(200, 54, 9, null, 0.85);
         $gBand   = $glass(814, 17, 8);
-        $gTable  = $glass(396, 282, 10);
+        $gTable  = $glass(396, 296, 10);
         $gStrip  = $glass(802, 58, 10);
         $gAbout  = $glass(500, 46, 10, $orange);
         $gCta    = $glass(802, 46, 12);
@@ -251,21 +251,23 @@
         @page { size: A4 landscape; margin: 0; }
         html, body { margin: 0; padding: 0; }
         body { font-family: DejaVu Sans, sans-serif; color: #0d2b5e; font-size: 7pt; }
-        .page { position: relative; width: 842pt; height: 593pt; page-break-after: always; overflow: hidden; }        .page.last { page-break-after: avoid; }
+        .page { position: relative; width: 842pt; height: 593pt; page-break-after: always; overflow: hidden; }
+        .page.last { page-break-after: avoid; }
         .abs { position: absolute; }
 
         /* ---- Table (glass card upar se piche alag image me hai) ---- */
         table.tb { width: 396pt; border-collapse: separate; border-spacing: 0; table-layout: fixed; }
-        table.tb tr { page-break-inside: avoid; }        table.tb th { background: #1f6fd0; color: #ffffff; font-size: 5.4pt; letter-spacing: 0.2pt; text-transform: uppercase; text-align: center; padding: 1pt 1.5pt; height: 14pt; border-left: 0.5pt solid #5b97e0; overflow: hidden; }
+        table.tb tr { page-break-inside: avoid; }
+        table.tb th { background: #1f6fd0; color: #ffffff; font-size: 5.4pt; letter-spacing: 0.2pt; text-transform: uppercase; text-align: center; padding: 1pt 1.5pt; height: 14pt; border-left: 0.5pt solid #5b97e0; overflow: hidden; }
         table.tb th.h-sale { background: #f7941d; border-left: 0.5pt solid #f7941d; }
         table.tb th.h-foc { background: #0e9f8e; border-left: 0.5pt solid #0e9f8e; }
         table.tb th.h-foc2 { background: #14b8a6; border-left: 0.5pt solid #0e9f8e; }
-        table.tb td { height: 22pt; padding: 1pt 2.2pt; font-size: 5.8pt; line-height: 1.12; border-bottom: 0.5pt solid #d6e5f3; vertical-align: middle; color: #0d2b5e; overflow: hidden; box-sizing: border-box; }        table.tb tr.alt td { background: #eaf3fc; }
-        .clip { overflow: hidden; display: table; width: 100%; height: 100%; }
-        .clip-inner { display: table-cell; vertical-align: middle; }
+        table.tb td { height: 20pt; padding: 1pt 2.2pt; font-size: 5.8pt; line-height: 1.12; border-bottom: 0.5pt solid #d6e5f3; vertical-align: middle; color: #0d2b5e; overflow: hidden; box-sizing: border-box; }
+        table.tb tr.alt td { background: #eaf3fc; }
+        .clip { overflow: hidden; box-sizing: border-box; }
         .c { text-align: center; }
         .sl { font-weight: bold; text-align: center; }
-        .pn { font-weight: bold; color: #1e78d6; white-space: nowrap; }
+        .pn { font-weight: bold; color: #1e78d6; word-break: break-all; }
         .pname { font-size: 6pt; font-weight: bold; color: #0d2b5e; line-height: 1.1; }
         .psub { font-size: 5.2pt; color: #5b6f84; line-height: 1.1; }
         .mrp { color: #4a5b6c; white-space: nowrap; text-align: center; }
@@ -305,7 +307,7 @@
 
         <div class="abs" style="top:16pt;left:316pt;width:296pt;">
             <div style="font-size:20pt;font-weight:bold;color:{{ $navy }};line-height:27pt;">{{ $isCustomer ? 'CUSTOMER RATE LIST' : 'NEW RATE LIST' }}</div>
-            <div style="font-size:20pt;font-weight:bold;color:{{ $orange }};line-height:27pt;">FOR ACCESSORIES</div>
+            <div style="font-size:20pt;font-weight:bold;color:{{ $orange }};line-height:20pt;">FOR ACCESSORIES</div>
         </div>
 
         {{-- Badges (2 x 2) --}}
@@ -330,7 +332,8 @@
         @foreach($cols as $ci => $colItems)
             @if($colItems->count())
                 @php $tx = $ci ? 436 : 20; @endphp
-                    <img class="abs" src="{{ $gTable }}" style="top:104pt;left:{{ $tx }}pt;width:396pt;height:282pt;">                <div class="abs" style="top:106pt;left:{{ $tx }}pt;width:396pt;">
+                <img class="abs" src="{{ $gTable }}" style="top:104pt;left:{{ $tx }}pt;width:396pt;height:296pt;">
+                <div class="abs" style="top:106pt;left:{{ $tx }}pt;width:396pt;">
                     <table class="tb" cellspacing="0" cellpadding="0">
                         <colgroup>
                             <col style="width:{{ $cw['sl'] }}pt">
@@ -351,7 +354,7 @@
                                     <th style="width:{{ $cw['part'] }}pt;">Part Number</th>
                                     @if($hasBrand)<th style="width:{{ $cw['brand'] }}pt;">Brand</th>@endif
                                     <th style="width:{{ $cw['cat'] }}pt;">Category</th>
-                                    <th style="width:{{ $cw['desc'] }}pt;">Product Description</th>
+                                    <th style="width:{{ $cw['desc'] }}pt;">Product Name</th>
                                     <th style="width:{{ $cw['mrp'] }}pt;">MRP</th>
                                     <th class="h-sale" style="width:{{ $cw['sale'] }}pt;">Customer<br>Rate (Each)</th>
                                 </tr>
@@ -361,7 +364,7 @@
                                     <th rowspan="2" style="width:{{ $cw['part'] }}pt;">Part<br>Number</th>
                                     @if($hasBrand)<th rowspan="2" style="width:{{ $cw['brand'] }}pt;">Brand</th>@endif
                                     <th rowspan="2" style="width:{{ $cw['cat'] }}pt;">Category</th>
-                                    <th rowspan="2" style="width:{{ $cw['desc'] }}pt;">Product Description</th>
+                                    <th rowspan="2" style="width:{{ $cw['desc'] }}pt;">Product Name</th>
                                     <th rowspan="2" style="width:{{ $cw['mrp'] }}pt;">MRP</th>
                                     <th rowspan="2" class="h-sale" style="width:{{ $cw['sale'] }}pt;">Sales Price<br>(Each)</th>
                                     <th colspan="3" class="h-foc" style="width:72pt;">FOC Qty</th>
@@ -384,32 +387,56 @@
                                     $extra    = implode(' - ', array_filter([optional($sub)->name, optional($vehicle)->name]));
                                     $sl       = $pi * $perPage + $ci * $rowsPerCol + $ri + 1;
 
-                                   [$nameTxt, , $nameLines] = $fitText((string) $product->name, $descCpl);
-$showExtra = $extra && $nameLines === 1;
-// Har row ke liye hamesha fixed 2-line height reserve karo — isse
-// koi bhi row kabhi extra height nahi legi, aur poori table hamesha
-// exact 20pt-per-row budget ke andar hi rahegi (perfect alignment).
-$descH  = 2 * $lh;
-[$catTxt, ]   = $fitText((string) ($category->name ?? '-'), $catCpl);
-$catH   = 2 * $lh;
-[$brandTxt, ] = $fitText((string) $brandOf($product), $brandCpl);
-$brandH = 2 * $lh;
+                                    $nameFit   = $fitText((string) $product->name, $descCpl);
+                                    $nameTxt   = $nameFit[0];
+                                    $nameLines = $nameFit[2];
+                                    $showExtra = $extra && $nameLines === 1;
+                                    // Har row ke liye hamesha fixed 2-line height reserve karo — isse
+                                    // koi bhi row kabhi extra height nahi legi, aur poori table hamesha
+                                    // exact 20pt-per-row budget ke andar hi rahegi (perfect alignment).
+                                    // Vertical-centering DomPDF me table-cell se reliably nahi chalti (overflow
+                                    // clip tab kaam nahi karta), isliye padding-top se center karte hain:
+                                    // content ki actual line-count 1 ho to upar half-line jagah chhod do.
+                                    $descH      = 2 * $lh;
+                                    $descLines  = $showExtra ? 2 : $nameLines;
+                                    $descPadTop = $descLines === 1 ? round($lh / 2, 2) : 0;
+
+                                    $catFit    = $fitText((string) ($category->name ?? '-'), $catCpl);
+                                    $catTxt    = $catFit[0];
+                                    $catLines  = $catFit[2];
+                                    $catH      = 2 * $lh;
+                                    $catPadTop = $catLines === 1 ? round($lh / 2, 2) : 0;
+
+                                    $brandFit    = $fitText((string) $brandOf($product), $brandCpl);
+                                    $brandTxt    = $brandFit[0];
+                                    $brandLines  = $brandFit[2];
+                                    $brandH      = 2 * $lh;
+                                    $brandPadTop = $brandLines === 1 ? round($lh / 2, 2) : 0;
+
                                     $code     = (string) ($product->item_code ?? '-');
-                                    $partSize = mb_strlen($code) > 11 ? 5.1 : 6;
+                                    $codeLen  = mb_strlen($code);
+                                    $partSize = $codeLen > 12 ? 4.4 : ($codeLen > 10 ? 4.9 : ($codeLen > 8 ? 5.4 : 6));
+                                    // Long codes ko 2 lines me wrap hone do (word-break:break-all CSS se), taaki
+                                    // koi bhi part number beech me na kate — column width ke hisaab se estimate
+                                    // karo ki 1 line me fit hoga ya 2 me, phir usi hisaab se vertical-center karo.
+                                    $partCpl     = max(4, (int) floor(($cw['part'] - 4) / ($partSize * 0.62)));
+                                    $partFit     = $fitText($code, $partCpl);
+                                    $partTxt     = $partFit[0];
+                                    $partLines   = $partFit[2];
+                                    $partH       = 2 * $lh;
+                                    $partPadTop  = $partLines === 1 ? round($lh / 2, 2) : 0;
                                 @endphp
                                 <tr class="{{ $ri % 2 ? 'alt' : '' }}">
                                     <td class="sl">{{ $sl }}</td>
-                                    <td class="pn" style="font-size:{{ $partSize }}pt;">{{ $code }}</td>
-                                 @if($hasBrand)
-                                        <td><div class="clip" style="height:{{ $brandH }}pt;"><div class="clip-inner">{{ $brandTxt }}</div></div></td>
-                                 @endif
-                                    <td><div class="clip" style="height:{{ $catH }}pt;"><div class="clip-inner">{{ $catTxt }}</div></div></td>
+                                    <td><div class="clip pn" style="height:{{ $partH }}pt;padding-top:{{ $partPadTop }}pt;font-size:{{ $partSize }}pt;">{{ $partTxt }}</div></td>
+                                    @if($hasBrand)
+                                        <td><div class="clip" style="height:{{ $brandH }}pt;padding-top:{{ $brandPadTop }}pt;">{{ $brandTxt }}</div></td>
+                                    @endif
+                                    <td><div class="clip" style="height:{{ $catH }}pt;padding-top:{{ $catPadTop }}pt;">{{ $catTxt }}</div></td>
                                     <td>
-                                        <div class="clip" style="height:{{ $descH }}pt;">
-                                            <div class="clip-inner">
-                                                <div class="pname">{{ $nameTxt }}</div>
-                                                @if($showExtra)<div class="psub">{{ mb_strimwidth($extra, 0, $descCpl + 4, '...') }}</div>@endif
-                                            </div>
+                                        <div class="clip" style="height:{{ $descH }}pt;padding-top:{{ $descPadTop }}pt;">
+                                            <div class="pname">{{ $nameTxt }}</div>
+                                            @if($showExtra)<div class="psub">{{ mb_strimwidth($extra, 0, $descCpl + 4, '...') }}</div>@endif
                                         </div>
                                     </td>
                                     <td class="mrp">{{ $cur }}{{ number_format((float) $product->price) }}</td>
@@ -506,8 +533,6 @@ $brandH = 2 * $lh;
         </div>
     </div>
 @endforeach
-<!-- @php 
-dd($ic['phone']);
-@endphp -->
+
 </body>
 </html>

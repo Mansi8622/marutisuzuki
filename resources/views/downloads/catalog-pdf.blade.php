@@ -37,6 +37,24 @@
             return 'data:image/svg+xml;base64,' . base64_encode($svg);
         };
 
+        // ---------- NEW: sidebar ka vertical company-name text ab SVG se banta hai ----------
+        // Wajah: DomPDF me CSS "transform: rotate(-90deg)" text par bharosemand nahi hai -
+        // kabhi kabhi text clip/cut ho jaata hai ya galat position par render hota hai
+        // (yahi "RES" wala tuta hua text screenshot me dikha). SVG <text> ke saath
+        // rotate karna DomPDF me stable rehta hai, bilkul gradients ki tarah.
+        $sideText = function (float $w, float $h, string $name, string $tagline, int $nameSize) {
+            $cx = round($w / 2, 2);
+            $cy = round($h / 2, 2);
+            $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' . $w . '" height="' . $h . '" viewBox="0 0 ' . $w . ' ' . $h . '">'
+                 . '<g transform="translate(' . $cx . ',' . $cy . ') rotate(-90)">'
+                 . '<text x="0" y="-8" text-anchor="middle" font-family="DejaVu Sans, sans-serif" font-weight="bold" '
+                 . 'font-size="' . $nameSize . '" letter-spacing="3" fill="#ffffff">' . htmlspecialchars(mb_strtoupper($name)) . '</text>'
+                 . '<text x="0" y="16" text-anchor="middle" font-family="DejaVu Sans, sans-serif" '
+                 . 'font-size="9" letter-spacing="2" fill="#cfeaf7">' . htmlspecialchars(mb_strtoupper($tagline)) . '</text>'
+                 . '</g></svg>';
+            return 'data:image/svg+xml;base64,' . base64_encode($svg);
+        };
+
         // ---------- Image ko box me fit karne ka helper (object-fit DomPDF me nahi chalta) ----------
         $fit = function ($path, $bw, $bh) {
             $w = $bw; $h = $bh;
@@ -86,7 +104,18 @@
             ->groupBy(fn($product) => optional($product->categories->where('is_subcategory', false)->first())->name ?? 'Products')
             ->sortKeys();
 
-        $pageNo = 4; // 1 cover, 2 about, 3 contents, 4 se products
+        // NEW: Contents (TOC) page ab FIXED 1 page nahi hai. Agar categories zyada hain
+        // (jaise 13+), to pehle table area (~626pt) me utni rows nahi aa paati thi aur
+        // footer ki line last row (jaise "SPEAKER") ke text ko cut kar deti thi.
+        // Ab TOC apne aap zaroorat ke hisaab se 2, 3... pages me split ho jaayega, aur
+        // us hisaab se product pages ka starting number bhi sahi calculate hota hai.
+        $tocPerPage   = 12; // ek Contents page par max kitni categories (safe estimate)
+        $catCount     = $groups->count();
+        $tocPageCount = max(1, (int) ceil($catCount / $tocPerPage));
+
+        $frontPages = 2 + $tocPageCount; // 1 cover + 1 about-us + N contents pages
+        $pageNo     = $frontPages + 1;   // yahi se product pages actually start honge
+
         $pages  = [];
         $toc    = [];
         foreach ($groups as $catName => $catItems) {
@@ -96,10 +125,14 @@
                 $pageNo++;
             }
         }
+        $tocChunks = collect($toc)->chunk($tocPerPage)->values();
 
         // Sidebar me company name ka size (naam lamba ho to chhota font)
         $nameLen  = mb_strlen($meta['name']);
         $nameSize = $nameLen <= 16 ? 34 : ($nameLen <= 24 ? 28 : 22);
+
+        // Sidebar text image ek hi baar bana lo (dono left/right sidebar isi ko reuse karenge)
+        $sideTextImg = $sideText(84, $H, $meta['name'], $meta['tagline'], $nameSize);
     @endphp
     <style>
         @page { margin: 0; }
@@ -132,13 +165,18 @@
         .toc .ct { font-size: 8pt; color: #657382; }
         .toc .pg { text-align: right; font-size: 11pt; font-weight: bold; color: #ff8a00; width: 60pt; }
 
-        .grid { border-collapse: separate; border-spacing: 6pt; width: 467pt; table-layout: fixed; }
+        /* ---- Product grid: card height thoda badha diya + har section ko thoda extra
+           breathing room diya gaya hai taaki naam/meta text kabhi hard-clip na ho ---- */
+        .grid { border-collapse: separate; border-spacing: 8pt; width: 467pt; table-layout: fixed; }
         .grid td { vertical-align: top; padding: 0; }
-        .pcard { height: 178pt; border: 0.75pt solid #d7e6f1; border-radius: 8pt; padding: 5pt 7pt; background: #ffffff; overflow: hidden; }
-        .pimg { height: 82pt; background: #f2f8fd; border-radius: 6pt; text-align: center; margin-top: 4pt; overflow: hidden; }
-        .pname { font-size: 8.8pt; font-weight: bold; color: #0a2a5e; margin-top: 6pt; line-height: 1.18; height: 22pt; overflow: hidden; }
-        .pcode { display: inline-block; background: #0b78b7; color: #ffffff; font-size: 6.8pt; font-weight: bold; padding: 2pt 6pt; border-radius: 8pt; margin: 2pt 0 3pt; max-width: 122pt; overflow: hidden; }
-        .pmeta { font-size: 6.3pt; color: #657382; line-height: 1.32; height: 32pt; overflow: hidden; }
+        .pcard { height: 204pt; border: 0.75pt solid #d7e6f1; border-radius: 8pt; padding: 5pt 7pt; background: #ffffff; overflow: hidden; }
+        .pimg { height: 78pt; background: #f2f8fd; border-radius: 6pt; text-align: center; margin-top: 4pt; overflow: hidden; }
+        .pname { font-size: 8.6pt; font-weight: bold; color: #0a2a5e; margin-top: 7pt; line-height: 1.3; height: 26pt; overflow: hidden; }
+        .pdesc { font-size: 6.3pt; color: #6b7a88; line-height: 1.3; height: 10pt; overflow: hidden; margin-top: 3pt; }
+        .prow { margin: 6pt 0 5pt; white-space: nowrap; }
+        .pcode { display: inline-block; background: #0b78b7; color: #ffffff; font-size: 6.8pt; font-weight: bold; padding: 2pt 6pt; border-radius: 8pt; max-width: 78pt; overflow: hidden; white-space: nowrap; vertical-align: middle; margin-right: 5pt; }
+        .pmrp { display: inline-block; font-size: 7.4pt; font-weight: bold; color: #ff8a00; vertical-align: middle; }
+        .pmeta { font-size: 6.3pt; color: #657382; line-height: 1.4; height: 34pt; overflow: hidden; }
         .pmeta b { color: #0a2a5e; }
 
         .foot-txt { font-size: 7.5pt; color: #657382; }
@@ -267,12 +305,18 @@
     </div>
 </div>
 
-{{-- ===================== PAGE 3 : CONTENTS ===================== --}}
+{{-- ===================== PAGE 3+ : CONTENTS (ab zaroorat ke hisaab se multi-page) ===================== --}}
+@foreach($tocChunks as $tIndex => $tRows)
 <div class="page">
     <img class="bg" src="{{ $infoHdr }}" style="width:595pt;height:150pt;">
     <div class="abs white" style="top:40pt;left:40pt;">
         <div style="font-size:9pt;letter-spacing:5pt;color:#cfeaf7;">BROWSE BY CATEGORY</div>
-        <div style="font-size:32pt;font-weight:bold;letter-spacing:1pt;margin-top:4pt;">Contents</div>
+        <div style="font-size:32pt;font-weight:bold;letter-spacing:1pt;margin-top:4pt;">
+            Contents
+            @if($tocChunks->count() > 1)
+                <span style="font-size:13pt;font-weight:normal;color:#cfeaf7;">&nbsp;({{ $tIndex + 1 }}/{{ $tocChunks->count() }})</span>
+            @endif
+        </div>
     </div>
     <div class="abs" style="top:26pt;left:489pt;width:66pt;height:66pt;border-radius:33pt;background:#ffffff;text-align:center;">
         <img src="{{ $meta['logo'] }}" style="width:46pt;max-height:46pt;margin-top:10pt;">
@@ -280,9 +324,9 @@
 
     <div class="abs" style="top:172pt;left:40pt;width:515pt;">
         <table class="toc" width="100%" cellspacing="0" cellpadding="0">
-            @foreach($toc as $i => $row)
+            @foreach($tRows as $row)
                 <tr>
-                    <td class="no">{{ str_pad($i + 1, 2, '0', STR_PAD_LEFT) }}</td>
+                    <td class="no">{{ str_pad($tIndex * $tocPerPage + $loop->iteration, 2, '0', STR_PAD_LEFT) }}</td>
                     <td>
                         <div class="nm">{{ $row['name'] }}</div>
                         <div class="ct">{{ $row['count'] }} {{ $row['count'] == 1 ? 'item' : 'items' }}</div>
@@ -298,11 +342,12 @@
         <table width="100%" cellspacing="0" cellpadding="0" style="margin-top:5pt;">
             <tr>
                 <td class="foot-txt">{{ $meta['name'] }} &nbsp;|&nbsp; {{ $meta['phone'] }} &nbsp;|&nbsp; {{ $meta['email'] }}</td>
-                <td class="foot-pg">3</td>
+                <td class="foot-pg">{{ 2 + $tIndex + 1 }}</td>
             </tr>
         </table>
     </div>
 </div>
+@endforeach
 
 {{-- ===================== PRODUCT PAGES (4 se aage) ===================== --}}
 @foreach($pages as $pg)
@@ -312,16 +357,16 @@
         $cl     = $isLeft ? 104 : 24;              // content ka left
     @endphp
     <div class="page">
-        {{-- Sidebar : gradient + logo + bada company name --}}
+        {{-- Sidebar : gradient background --}}
         <img class="bg" src="{{ $isLeft ? $sideL : $sideR }}" style="left:{{ $isLeft ? 0 : $W - 84 }}pt;width:84pt;height:836pt;">
+
+        {{-- Sidebar : vertical company name/tagline, ab ek hi flattened SVG image ke roop me.
+             Left sidebar par jaisa-hai-waisa; right sidebar par mirror karne ki zaroorat nahi -
+             text hamesha bottom-to-top hi reads, jo dono side theek lagta hai. --}}
+        <img class="bg" src="{{ $sideTextImg }}" style="left:{{ $isLeft ? 0 : $W - 84 }}pt;top:0;width:84pt;height:836pt;">
 
         <div class="abs" style="top:22pt;left:{{ $cx - 33 }}pt;width:66pt;height:66pt;border-radius:33pt;background:#ffffff;text-align:center;">
             <img src="{{ $meta['logo'] }}" style="width:48pt;max-height:48pt;margin-top:9pt;">
-        </div>
-
-        <div class="abs white" style="top:{{ 480 - 40 }}pt;left:{{ $cx - 310 }}pt;width:620pt;height:80pt;text-align:center;transform:rotate(-90deg);transform-origin:50% 50%;">
-            <div style="font-size:{{ $nameSize }}pt;font-weight:bold;letter-spacing:3pt;line-height:44pt;">{{ strtoupper($meta['name']) }}</div>
-            <div style="font-size:9pt;letter-spacing:3pt;color:#cfeaf7;">{{ strtoupper($meta['tagline']) }}</div>
         </div>
 
         {{-- Header --}}
@@ -345,23 +390,32 @@
                                         $vehicle  = optional($product->fitments->first())->vehicle;
                                         $photo    = $product->photo->first();
                                         $path     = $photo ? $photo->getPath() : null;
-                                        [$iw, $ih] = $fit($path, 122, 74);
+                                        [$iw, $ih] = $fit($path, 122, 70);
                                     @endphp
                                     <div class="pcard">
                                         <img src="{{ $bar }}" style="width:100%;height:3pt;">
                                         <div class="pimg">
-                                            @if($photo)
-                                                <img src="{{ $path }}" style="width:{{ $iw }}pt;height:{{ $ih }}pt;margin-top:{{ round((82 - $ih) / 2, 1) }}pt;">
+                                            @if($photo && is_file($path))
+                                                <img src="{{ $path }}" style="width:{{ $iw }}pt;height:{{ $ih }}pt;margin-top:{{ round((78 - $ih) / 2, 1) }}pt;">
                                             @else
-                                                <div style="line-height:82pt;color:#9aa6b2;font-size:8pt;">No Image</div>
+                                                <div style="line-height:78pt;color:#9aa6b2;font-size:8pt;">No Image</div>
                                             @endif
                                         </div>
-                                        <div class="pname">{{ mb_strimwidth($product->name, 0, 38, '...') }}</div>
-                                        <span class="pcode">CODE: {{ mb_strimwidth($product->item_code ?? '-', 0, 18, '...') }}</span>
+                                        {{-- Naam ko 32 chars tak hi rakha hai (pehle 38 tha) taaki
+                                             card width me reliably 2 lines me fit ho jaaye aur
+                                             3rd line clip hone ka risk na rahe --}}
+                                        <div class="pname">{{ mb_strimwidth($product->name, 0, 30, '...') }}</div>
+                                        <div class="pdesc">{{ mb_strimwidth(strip_tags($product->description ?? ''), 0, 46, '...') }}</div>
+                                        <div class="prow">
+                                            <span class="pcode">CODE: {{ mb_strimwidth($product->item_code ?? '-', 0, 16, '...') }}</span>
+                                            @if($product->mrp() > 0)
+                                                <span class="pmrp">&#8377;{{ number_format($product->mrp(), 0) }}</span>
+                                            @endif
+                                        </div>
                                         <div class="pmeta">
-                                            <b>Category:</b> {{ mb_strimwidth($category->name ?? '-', 0, 22, '...') }}<br>
-                                            @if($sub)<b>Sub:</b> {{ mb_strimwidth($sub->name, 0, 22, '...') }}<br>@endif
-                                            @if($vehicle)<b>Vehicle:</b> {{ mb_strimwidth($vehicle->name, 0, 22, '...') }}@endif
+                                            <b>Category:</b> {{ mb_strimwidth($category->name ?? '-', 0, 20, '...') }}<br>
+                                            @if($sub)<b>Sub:</b> {{ mb_strimwidth($sub->name, 0, 20, '...') }}<br>@endif
+                                            @if($vehicle)<b>Vehicle:</b> {{ mb_strimwidth($vehicle->name, 0, 20, '...') }}@endif
                                         </div>
                                     </div>
                                 @endif

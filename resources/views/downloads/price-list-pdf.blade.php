@@ -173,7 +173,7 @@
         $gHeader = $glass(814, 64, 12);
         $gBadge  = $glass(200, 54, 9, null, 0.85);
         $gBand   = $glass(814, 17, 8);
-        $gTable  = $glass(396, 274, 10);
+        $gTable  = $glass(396, 282, 10);
         $gStrip  = $glass(802, 58, 10);
         $gAbout  = $glass(500, 46, 10, $orange);
         $gCta    = $glass(802, 46, 12);
@@ -251,19 +251,18 @@
         @page { size: A4 landscape; margin: 0; }
         html, body { margin: 0; padding: 0; }
         body { font-family: DejaVu Sans, sans-serif; color: #0d2b5e; font-size: 7pt; }
-        .page { position: relative; width: 842pt; height: 593pt; page-break-after: always; }
-        .page.last { page-break-after: avoid; }
+        .page { position: relative; width: 842pt; height: 593pt; page-break-after: always; overflow: hidden; }        .page.last { page-break-after: avoid; }
         .abs { position: absolute; }
 
         /* ---- Table (glass card upar se piche alag image me hai) ---- */
         table.tb { width: 396pt; border-collapse: separate; border-spacing: 0; table-layout: fixed; }
-        table.tb th { background: #1f6fd0; color: #ffffff; font-size: 5.4pt; letter-spacing: 0.2pt; text-transform: uppercase; text-align: center; padding: 1pt 1.5pt; height: 14pt; border-left: 0.5pt solid #5b97e0; overflow: hidden; }
+        table.tb tr { page-break-inside: avoid; }        table.tb th { background: #1f6fd0; color: #ffffff; font-size: 5.4pt; letter-spacing: 0.2pt; text-transform: uppercase; text-align: center; padding: 1pt 1.5pt; height: 14pt; border-left: 0.5pt solid #5b97e0; overflow: hidden; }
         table.tb th.h-sale { background: #f7941d; border-left: 0.5pt solid #f7941d; }
         table.tb th.h-foc { background: #0e9f8e; border-left: 0.5pt solid #0e9f8e; }
         table.tb th.h-foc2 { background: #14b8a6; border-left: 0.5pt solid #0e9f8e; }
-        table.tb td { height: 20pt; padding: 1pt 2.2pt; font-size: 5.8pt; line-height: 1.12; border-bottom: 0.5pt solid #d6e5f3; vertical-align: middle; color: #0d2b5e; overflow: hidden; }
-        table.tb tr.alt td { background: #eaf3fc; }
-        .clip { overflow: hidden; }
+        table.tb td { height: 22pt; padding: 1pt 2.2pt; font-size: 5.8pt; line-height: 1.12; border-bottom: 0.5pt solid #d6e5f3; vertical-align: middle; color: #0d2b5e; overflow: hidden; box-sizing: border-box; }        table.tb tr.alt td { background: #eaf3fc; }
+        .clip { overflow: hidden; display: table; width: 100%; height: 100%; }
+        .clip-inner { display: table-cell; vertical-align: middle; }
         .c { text-align: center; }
         .sl { font-weight: bold; text-align: center; }
         .pn { font-weight: bold; color: #1e78d6; white-space: nowrap; }
@@ -331,8 +330,7 @@
         @foreach($cols as $ci => $colItems)
             @if($colItems->count())
                 @php $tx = $ci ? 436 : 20; @endphp
-                <img class="abs" src="{{ $gTable }}" style="top:104pt;left:{{ $tx }}pt;width:396pt;height:274pt;">
-                <div class="abs" style="top:106pt;left:{{ $tx }}pt;width:396pt;">
+                    <img class="abs" src="{{ $gTable }}" style="top:104pt;left:{{ $tx }}pt;width:396pt;height:282pt;">                <div class="abs" style="top:106pt;left:{{ $tx }}pt;width:396pt;">
                     <table class="tb" cellspacing="0" cellpadding="0">
                         <colgroup>
                             <col style="width:{{ $cw['sl'] }}pt">
@@ -386,25 +384,32 @@
                                     $extra    = implode(' - ', array_filter([optional($sub)->name, optional($vehicle)->name]));
                                     $sl       = $pi * $perPage + $ci * $rowsPerCol + $ri + 1;
 
-                                    [$nameTxt, $nameH, $nameLines] = $fitText((string) $product->name, $descCpl);
-                                    $showExtra = $extra && $nameLines === 1;
-                                    $descH     = $showExtra ? 2 * $lh : $nameH;
-                                    [$catTxt, $catH]     = $fitText((string) ($category->name ?? '-'), $catCpl);
-                                    [$brandTxt, $brandH] = $fitText((string) $brandOf($product), $brandCpl);
+                                   [$nameTxt, , $nameLines] = $fitText((string) $product->name, $descCpl);
+$showExtra = $extra && $nameLines === 1;
+// Har row ke liye hamesha fixed 2-line height reserve karo — isse
+// koi bhi row kabhi extra height nahi legi, aur poori table hamesha
+// exact 20pt-per-row budget ke andar hi rahegi (perfect alignment).
+$descH  = 2 * $lh;
+[$catTxt, ]   = $fitText((string) ($category->name ?? '-'), $catCpl);
+$catH   = 2 * $lh;
+[$brandTxt, ] = $fitText((string) $brandOf($product), $brandCpl);
+$brandH = 2 * $lh;
                                     $code     = (string) ($product->item_code ?? '-');
                                     $partSize = mb_strlen($code) > 11 ? 5.1 : 6;
                                 @endphp
                                 <tr class="{{ $ri % 2 ? 'alt' : '' }}">
                                     <td class="sl">{{ $sl }}</td>
                                     <td class="pn" style="font-size:{{ $partSize }}pt;">{{ $code }}</td>
-                                    @if($hasBrand)
-                                        <td><div class="clip" style="height:{{ $brandH }}pt;">{{ $brandTxt }}</div></td>
-                                    @endif
-                                    <td><div class="clip" style="height:{{ $catH }}pt;">{{ $catTxt }}</div></td>
+                                 @if($hasBrand)
+                                        <td><div class="clip" style="height:{{ $brandH }}pt;"><div class="clip-inner">{{ $brandTxt }}</div></div></td>
+                                 @endif
+                                    <td><div class="clip" style="height:{{ $catH }}pt;"><div class="clip-inner">{{ $catTxt }}</div></div></td>
                                     <td>
                                         <div class="clip" style="height:{{ $descH }}pt;">
-                                            <div class="pname">{{ $nameTxt }}</div>
-                                            @if($showExtra)<div class="psub">{{ mb_strimwidth($extra, 0, $descCpl + 4, '...') }}</div>@endif
+                                            <div class="clip-inner">
+                                                <div class="pname">{{ $nameTxt }}</div>
+                                                @if($showExtra)<div class="psub">{{ mb_strimwidth($extra, 0, $descCpl + 4, '...') }}</div>@endif
+                                            </div>
                                         </div>
                                     </td>
                                     <td class="mrp">{{ $cur }}{{ number_format((float) $product->price) }}</td>
@@ -501,6 +506,8 @@
         </div>
     </div>
 @endforeach
-
+<!-- @php 
+dd($ic['phone']);
+@endphp -->
 </body>
 </html>

@@ -863,7 +863,7 @@
 
                                                 @else
 
-                                                    Scheme / Offer
+                                                    Scheme
 
                                                 @endif
 
@@ -885,7 +885,7 @@
                                 <span class="gst-note">(Incl. GST)</span>
                             @endif
                         </div>
-                        <div class="msv-stock {{ $product->isInStock() ? 'in' : 'out' }}"><i class="fa-solid {{ $product->isInStock() ? 'fa-circle-check' : 'fa-circle-xmark' }}"></i>{{ $product->isInStock() ? 'In stock — available now' : 'Out of stock' }}</div>
+                        <div class="msv-stock {{ $product->isInStock() ? 'in' : 'out' }}"><i class="fa-solid {{ $product->isInStock() ? 'fa-circle-check' : 'fa-circle-xmark' }}"></i>{{ $product->isInStock() ? 'Available now' : 'Out of stock' }}</div>
 
                                     </div>
 

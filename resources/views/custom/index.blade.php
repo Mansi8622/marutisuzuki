@@ -6,6 +6,18 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 
+@php
+    // Current logged-in user ke wishlist product IDs (heart ko refresh ke baad bhi red dikhane ke liye)
+    $wishlistProductIds = [];
+    if (Auth::guard('customer')->check()) {
+        $wishlistProductIds = \App\Models\Wishlist::where('customer_id', Auth::guard('customer')->user()->id)
+                                ->pluck('product_id')->toArray();
+    } elseif (Auth::guard('web')->check()) {
+        $wishlistProductIds = \App\Models\Wishlist::where('user_id', Auth::guard('web')->user()->id)
+                                ->pluck('product_id')->toArray();
+    }
+@endphp
+
 <style>
                                                                                                                                   
     :root{
@@ -23,6 +35,16 @@
         --f-display: 'Sora', sans-serif;
         --f-body:    'Inter', sans-serif;
         --f-mono:    'JetBrains Mono', monospace;
+
+        /* Product-card palette (namespaced so it never clashes with the theme colors above) */
+        --msv-navy:        #0B1622;
+        --msv-blueprint:   #2F6FA8;
+        --msv-orange:      #FF5A1F;
+        --msv-orange-dk:   #D9450F;
+        --msv-steel:       #6b7d8f;
+        --msv-fk-yellow:   #FFD814;
+        --msv-fk-yellow-dk:#F7CA00;
+        --msv-fk-green:    #388E3C;
     }
 
     .sb-page{ font-family: var(--f-body); color: var(--ink); background: var(--ice); overflow-x: hidden; }
@@ -227,33 +249,138 @@
     }
     .sb-rail-head a:hover{ gap:10px; }
 
-    /* ---------- product cards ---------- */
-    .sb-product{
-        border:1px solid var(--ice-2); background:#fff; border-radius:18px;
-        position:relative; height:100%; overflow:hidden;
-        transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease;
+    /* ============================================================
+       PRODUCT SLIDER (used by Trending Products)
+       ============================================================ */
+    .msv-slider-wrap{ position:relative; }
+    .msv-slider{ overflow:hidden; }
+    .msv-slider-track{
+        display:flex; gap:18px;
+        transition: transform .6s cubic-bezier(.22,.61,.36,1);
     }
-    .sb-product:hover{ transform: translateY(-6px); border-color: transparent; box-shadow: 0 24px 40px -18px rgba(18,26,46,0.28); }
-    .sb-product .card-body{ padding: 18px; }
-    .sb-product .best{
-        border-radius: 999px !important; background: var(--ember) !important;
-        font-family: var(--f-mono); font-size:0.65rem !important; letter-spacing:0.06em; text-transform:uppercase;
-        opacity:1 !important; top:12px !important; left:12px !important; padding: 5px 12px !important;
+    .msv-slide{ flex:0 0 calc(25% - 13.5px); min-width:0; }
+    .msv-slider-btn{
+        position:absolute; top:50%; transform:translateY(-50%); z-index:5;
+        width:42px; height:42px; border-radius:50%; background:#fff;
+        border:1px solid #e6edf3; box-shadow:0 6px 16px rgba(11,22,34,.12);
+        display:flex; align-items:center; justify-content:center; cursor:pointer;
+        color:#16283C; transition: background .2s ease, color .2s ease, box-shadow .2s ease;
     }
-    .sb-product img{ transition: transform .5s ease; border-radius: 12px; }
-    .sb-product:hover img{ transform: scale(1.05); }
-    .sb-product h5{
-        font-family: var(--f-body); text-transform:none; font-weight:600; font-size:0.98rem; margin-top:14px;
+    .msv-slider-btn:hover{ background:var(--msv-orange); color:#fff; box-shadow:0 10px 22px rgba(255,90,31,.28); }
+    .msv-slider-btn.prev{ left:-20px; }
+    .msv-slider-btn.next{ right:-20px; }
+    @media (max-width:991.98px){
+        .msv-slide{ flex:0 0 calc(50% - 9px); }
+        .msv-slider-btn.prev{ left:-10px; }
+        .msv-slider-btn.next{ right:-10px; }
     }
-    .sb-product strong{ font-family: var(--f-mono); display:block; }
-    .sb-product strong del{ color: var(--steel); font-weight:400; font-size:0.85rem; display:block; }
-    .sb-product strong p{ color: var(--mint); font-size:1.15rem; font-weight:700; margin:2px 0 0 0; }
-    .sb-product .primary-bg{
-        background: var(--ink) !important; border-radius: 999px !important;
-        font-family: var(--f-mono); font-size:0.78rem; letter-spacing:0.06em; text-transform:uppercase;
-        transition: background .2s ease;
+    @media (max-width:575.98px){
+        .msv-slide{ flex:0 0 calc(100% - 0px); }
+        .msv-slider-wrap{ padding:0 6px; }
+        .msv-slider-btn{ width:34px; height:34px; }
+        .msv-slider-btn.prev{ left:-4px; }
+        .msv-slider-btn.next{ right:-4px; }
     }
-    .sb-product .primary-bg:hover{ background: var(--volt) !important; }
+
+
+    /* ============================================================
+       BRAND / COMPANY TILE  (Explore Our Company Products)
+       ============================================================ */
+    .msv-brand-card{
+        background:#fff; border:1px solid #e6edf3; border-radius:16px;
+        padding: 26px 14px; text-align:center; height:100%;
+        transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+    }
+    .msv-brand-card:hover{
+        transform: translateY(-6px); border-color: var(--msv-orange);
+        box-shadow: 0 18px 32px -16px rgba(11,22,34,0.20);
+    }
+    .msv-brand-card .logo-wrap{
+        width:112px; height:112px; margin:0 auto 14px; border-radius:50%;
+        background:#f5f7fa; display:flex; align-items:center; justify-content:center;
+        overflow:hidden; border:1px solid #e6edf3;
+    }
+    .msv-brand-card .logo-wrap img{ width:78%; height:78%; object-fit:contain; }
+    .msv-brand-card h5{
+        font-family: var(--f-body); font-weight:600; font-size:0.95rem; color:#16283C;
+        margin:0; text-transform:none;
+    }
+
+    /* ============================================================
+       PRODUCT CARD — same Flipkart/Amazon-style card used on the
+       product listing page, reused here for New Launches, Trending
+       Products and More to Explore so the design matches exactly.
+       ============================================================ */
+    .msv-product-card{
+        border:1px solid #e6edf3; border-radius:4px; overflow:hidden;
+        background:#fff; height:100%;
+        transition: box-shadow .2s ease, transform .2s ease;
+    }
+    .msv-product-card:hover{ box-shadow:0 8px 20px rgba(16,32,48,.10); transform: translateY(-2px); }
+
+    .msv-img-wrap{ position:relative; overflow:hidden; background:#f5f7fa; }
+    .msv-img-wrap img{
+        width:100%; height:200px; object-fit:contain; display:block;
+        padding:.75rem; transition: transform .3s ease;
+        background:#fff;
+    }
+    .msv-product-card:hover .msv-img-wrap img{ transform: scale(1.04); }
+
+    .msv-wish{
+        position:absolute; top:8px; right:8px; z-index:3;
+        width:28px; height:28px; border-radius:50%; background:#fff;
+        border:1px solid #e6edf3; display:flex; align-items:center; justify-content:center;
+        color:#9aa7b3; font-size:.85rem; box-shadow:0 1px 4px rgba(16,32,48,.08);
+        cursor:pointer;
+    }
+    .msv-wish.active{ background:var(--msv-orange); border-color:var(--msv-orange); }
+    .msv-wish.active i{ color:#fff; }
+
+    .msv-tag{
+        position:absolute; top:10px; left:10px; z-index:2;
+        background:var(--msv-orange) !important; color:#fff !important;
+        font-family:'JetBrains Mono', monospace; font-size:.65rem; font-weight:600;
+        letter-spacing:.03em; text-transform:uppercase;
+        padding:.28rem .5rem !important; border-radius:2px;
+    }
+
+    .msv-card-body{ padding:.85rem .9rem 1rem; text-align:left; }
+    .msv-product-name{
+        font-size:.85rem; color:#212121; font-weight:400; min-height:2.3em;
+        overflow:hidden; text-overflow:ellipsis; display:-webkit-box;
+        -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.3;
+        text-transform:none;
+    }
+
+    .msv-item-code{
+        font-size:.72rem; color:var(--msv-steel); font-family:'JetBrains Mono', monospace;
+        margin:.15rem 0 .3rem;
+    }
+    .msv-item-code span{ color:#26333f; font-weight:600; }
+
+    .msv-assured{
+        display:inline-flex; align-items:center; gap:.25rem;
+        font-size:.72rem; color:var(--msv-blueprint); font-weight:600;
+    }
+    .msv-assured i{ color:var(--msv-blueprint); }
+
+    .msv-price-row{ margin:.45rem 0 .55rem; display:flex; align-items:baseline; gap:.55rem; flex-wrap:wrap; }
+    .msv-price-row .cur{ font-size:1.1rem; font-weight:800; color:#171717; font-family:'Inter', sans-serif; letter-spacing:-.02em; }
+    .msv-price-row .mrp-price{ color:#8a8a8a; font-size:.82rem; font-weight:400; text-decoration:line-through; text-decoration-thickness:1.5px; }
+    .msv-price-row .off{ color:var(--msv-fk-green); font-size:.78rem; font-weight:700; }
+
+    .msv-actions{ display:flex; gap:.5rem; margin-top:.6rem; }
+    .msv-add-cart{
+        background:var(--msv-fk-yellow); color:#0F1111; border:1px solid #FCD200;
+        width:100%; font-family:'Inter'; font-weight:600; font-size:.85rem;
+        letter-spacing:.01em; padding:.5rem 0; border-radius:20px;
+        display:flex; align-items:center; justify-content:center; gap:.4rem;
+        box-shadow:0 1px 0 rgba(0,0,0,.05);
+        transition: background .15s ease, box-shadow .15s ease;
+    }
+    .msv-add-cart:hover{ background:var(--msv-fk-yellow-dk); color:#0F1111; box-shadow:0 2px 6px rgba(0,0,0,.12); }
+    .msv-add-cart:active{ background:var(--msv-fk-yellow-dk); transform: translateY(1px); }
+    .msv-add-cart i{ font-size:.82rem; }
 
     /* ============================================================
        DISCOUNT BANNER
@@ -293,25 +420,6 @@
     .sb-budget h1.fw-bold{ font-size:2.2rem; }
     .sb-budget p{ font-family:var(--f-mono); font-size:0.8rem; letter-spacing:0.06em; color: var(--steel); }
 
-    /* ============================================================
-       EXPLORE GRID
-       ============================================================ */
-    .sb-explore .card{ border:1px solid var(--ice-2); border-radius:18px; position:relative; height:100%; overflow:hidden; transition: transform .3s ease, box-shadow .3s ease; }
-    .sb-explore .card:hover{ transform: translateY(-6px); box-shadow: 0 24px 40px -18px rgba(18,26,46,0.22); }
-    .sb-explore .card img{ transition: transform .5s ease; }
-    .sb-explore .card:hover img{ transform: scale(1.05); }
-    .sb-explore .btn.position-absolute{
-        background: rgba(255,255,255,0.9) !important; border:none; border-radius:50% !important;
-        width:38px; height:38px; display:flex; align-items:center; justify-content:center; backdrop-filter: blur(4px);
-        transition: background .2s ease;
-    }
-    .sb-explore .btn.position-absolute:hover{ background: var(--ember) !important; }
-    .sb-explore .btn.position-absolute:hover i{ color:#fff; }
-    .sb-explore .btn.position-absolute i{ color: var(--ember); transition: color .2s ease; }
-    .sb-explore h5{ font-family: var(--f-body); text-transform:none; font-weight:600; font-size:0.95rem; }
-    .sb-explore strong p{ color: var(--mint); font-weight:700; }
-    .sb-explore strong del{ color: var(--steel); font-size:0.85rem; }
-
     @media (max-width: 767px){
         .sb-hero .carousel-caption{ left:6%; right:6%; max-width:none; bottom:11%; }
         .sb-hero .carousel-caption h1{ font-size:1.55rem; margin-bottom:16px; }
@@ -331,12 +439,8 @@
         .sb-rail-head{ flex-direction:column; align-items:flex-start; gap:8px; margin-bottom:20px; }
         .sb-rail-head h2{ font-size:1.4rem; }
 
-        .sb-product .card-body,
-        .sb-explore .card .text-center.p-3{ padding: 12px; }
-        .sb-product .card-body img,
-        .sb-explore .card img{ height:150px !important; }
-
-        .image-container{ width:110px !important; height:110px !important; }
+        .msv-img-wrap img{ height:150px !important; }
+        .msv-brand-card .logo-wrap{ width:88px; height:88px; }
 
         .sb-discount{ min-height:300px; border-radius:18px; }
         .sb-discount-content{ padding: 32px 22px; }
@@ -520,18 +624,21 @@
       <a href="/product" class="decoration">View All <i class="fa-solid fa-arrow-right"></i></a>
     </div>
     <div class="row g-3">
-      @foreach($allproducts as $company)
+           @foreach($allproducts as $company)
+        @php
+            // DB me company ka logo set nahi hai to EEMOT ke liye local fallback image use karo
+            $companyLogoUrl = $company->company_logo->first()?->getUrl('preview');
+            if (!$companyLogoUrl && str_contains(strtolower($company->company_name), 'eemot')) {
+                $companyLogoUrl = asset('asset/img/logo.webp');
+            }
+        @endphp
         <div class="col-lg-3 col-6 mb-3 reveal">
           <a href="{{ route('company.products', $company->id) }}" class="decoration">
-            <div class="card border-0 text-center">
-              <div class="image-container" style="width: 160px; height: 160px; margin: 0 auto;">
-                <img src="{{ $company->company_logo->first()?->getUrl('preview') }}"
-                     alt="{{ $company->company_name }}"
-                     style="width: 100%; height: 100%; object-fit: cover; border-radius: 16px;">
+            <div class="msv-brand-card">
+              <div class="logo-wrap">
+                <img src="{{ $companyLogoUrl }}" alt="{{ $company->company_name }}">
               </div>
-              <div class="text-center p-0">
-                <h5 class="text-center">{{ $company->company_name }}</h5>
-              </div>
+              <h5>{{ $company->company_name }}</h5>
             </div>
           </a>
         </div>
@@ -549,55 +656,66 @@
     </div>
     <div class="row g-3">
       @foreach($newproducts as $product)
-      <div class="col-6 col-lg-3 mb-3 reveal">
-        <a href="/product-detail/{{ $product->id }}" class="decoration">
-          <form action="{{ route('cart.add') }}" method="POST">
-            @csrf
-            <input type="hidden" name="id" value="{{ $product->id }}">
-            <input type="hidden" name="name" value="{{ $product->name }}">
-            <input type="hidden" name="price" value="{{ $product->price }}">
-            <input type="hidden" name="discount" value="{{ $product->discount }}">
-            <input type="hidden" name="price_1" value="{{ $product->price_1 }}">
-            <input type="hidden" name="rate_2" value="{{ $product->rate_2 }}">
-            <input type="hidden" name="quantity" value="{{ $product->quantity }}">
-            <input type="hidden" name="description" value="{{ $product->description }}">
-            <input type="hidden" name="photo" value="{{ $product->photo->first()?->getUrl() ?? 'default.png' }}">
-
-            <div class="card sb-product">
-              <div class="card-body">
+        @php
+            $mrp = (float) ($product->price ?? 0);
+            if (Auth::guard('customer')->check()) {
+                $displayPrice = (float) ($product->rate_2 ?? $mrp);
+            } elseif (Auth::guard('web')->check()) {
+                $displayPrice = (float) ($product->price_1 ?? $mrp);
+            } else {
+                $displayPrice = (float) $product->sellingPrice();
+            }
+            if ($displayPrice <= 0) { $displayPrice = $mrp; }
+            $priceDiscount = 0;
+            if ($mrp > 0 && $displayPrice < $mrp) {
+                $priceDiscount = round((($mrp - $displayPrice) / $mrp) * 100);
+            }
+            $isWishlisted = in_array($product->id, $wishlistProductIds ?? []);
+        @endphp
+        <div class="col-6 col-lg-3 mb-3 reveal">
+          <div class="card border-0 msv-product-card position-relative">
+            <span class="msv-wish {{ $isWishlisted ? 'active' : '' }}" onclick="toggleWishlist(event, {{ $product->id }})">
+              <i class="fa-{{ $isWishlisted ? 'solid' : 'regular' }} fa-heart"></i>
+            </span>
+            <a href="/product-detail/{{ $product->id }}" class="decoration">
+              <div class="msv-img-wrap">
                 @if($product->tags->isNotEmpty())
                   @foreach($product->tags as $tag)
-                    <button class="position-absolute btn text-white px-2 py-1 best">
-                      {{ $tag->name }}
-                    </button>
+                    <span class="msv-tag">{{ $tag->name }}</span>
                   @endforeach
                 @endif
-
-                <div class="text-center">
-                  <img src="{{ $product->photo->first()?->getUrl() }}" alt="{{ $product->name }}" style="width: 100%; height:220px; object-fit:cover;">
-                </div>
-
-                <div class="text-center p-0">
-                  <h5 class="text-center text-capitalize">{{ $product->name }}</h5>
-                  <strong>
-                    @if (Auth::guard('web')->check())
-                      <del class="fw-bold">MRP :- ₹ {{ $product->price - ($product->price * $product->discount / 100) }}</del>
-                      <p>₹ {{ $product->price_1 }}</p>
-                    @elseif (Auth::guard('customer')->check())
-                      <del class="fw-bold">MRP :- ₹ {{ $product->price - ($product->price * $product->discount / 100) }}</del>
-                      <p>Price :- ₹ {{ $product->rate_2 }}</p>
-                    @else
-                      <p>Price ₹{{ $product->price - ($product->price * $product->discount / 100) }}</p>
-                      <del>MRP :- ₹ {{ $product->price }}</del>
-                    @endif
-                  </strong>
-                  <button type="submit" class="btn text-white w-100 py-2 primary-bg mt-2">Add to Cart</button>
+                <img src="{{ $product->photo->first()?->getUrl() }}" alt="{{ $product->name }}">
+              </div>
+              <div class="msv-card-body">
+                <h5 class="msv-product-name">{{ $product->name }}</h5>
+                @if($product->item_code)
+                  <p class="msv-item-code mb-0">Item: <span>{{ $product->item_code }}</span></p>
+                @endif
+                <div class="msv-assured mb-1"><i class="fa-solid fa-shield-halved"></i> Assured</div>
+                <div class="msv-price-row">
+                  <span class="cur">₹{{ number_format($displayPrice, 0) }}</span>
+                  <del class="mrp-price">₹{{ number_format($mrp, 0) }}</del>
+                  @if($priceDiscount > 0)<span class="off">{{ $priceDiscount }}% off</span>@endif
                 </div>
               </div>
+            </a>
+            <div class="px-3 pb-3">
+              <form action="{{ route('cart.add') }}" method="POST" class="msv-actions">
+                @csrf
+                <input type="hidden" name="id" value="{{ $product->id }}">
+                <input type="hidden" name="name" value="{{ $product->name }}">
+                <input type="hidden" name="price" value="{{ $product->price }}">
+                <input type="hidden" name="discount" value="{{ $product->discount }}">
+                <input type="hidden" name="price_1" value="{{ $product->price_1 }}">
+                <input type="hidden" name="rate_2" value="{{ $product->rate_2 }}">
+                <input type="hidden" name="quantity" value="{{ $product->quantity }}">
+                <input type="hidden" name="description" value="{{ $product->description }}">
+                <input type="hidden" name="photo" value="{{ $product->photo->first()?->getUrl() ?? 'default.png' }}">
+                <button type="submit" class="msv-add-cart"><i class="fa-solid fa-cart-plus"></i> Add to Cart</button>
+              </form>
             </div>
-          </form>
-        </a>
-      </div>
+          </div>
+        </div>
       @endforeach
     </div>
   </div>
@@ -625,58 +743,79 @@
       <h2>Trending Products</h2>
       <a href="/product" class="decoration">View All <i class="fa-solid fa-arrow-right"></i></a>
     </div>
-    <div class="row g-3">
-      @foreach($trendingproducts as $product)
-      <div class="col-6 col-lg-3 mb-3 reveal">
-        <a href="/product-detail/{{ $product->id }}" class="decoration">
-          <form action="{{ route('cart.add') }}" method="POST">
-            @csrf
-            <input type="hidden" name="id" value="{{ $product->id }}">
-            <input type="hidden" name="name" value="{{ $product->name }}">
-            <input type="hidden" name="price" value="{{ $product->price }}">
-            <input type="hidden" name="discount" value="{{ $product->discount }}">
-            <input type="hidden" name="price_1" value="{{ $product->price_1 }}">
-            <input type="hidden" name="rate_2" value="{{ $product->rate_2 }}">
-            <input type="hidden" name="quantity" value="{{ $product->quantity }}">
-            <input type="hidden" name="description" value="{{ $product->description }}">
-            <input type="hidden" name="photo" value="{{ $product->photo->first()?->getUrl() ?? 'default.png' }}">
-
-            <div class="card sb-product">
-              <div class="card-body">
-                @if($product->tags->isNotEmpty())
-                  @foreach($product->tags as $tag)
-                    <button class="position-absolute btn text-white px-2 py-1 best">
-                      {{ $tag->name }}
-                    </button>
-                  @endforeach
-                @endif
-
-                <div class="text-center">
-                  <img src="{{ $product->photo->first()?->getUrl() }}" alt="{{ $product->name }}" style="width: 100%; height:220px; object-fit:cover;">
-                </div>
-
-                <div class="text-center p-0">
-                  <h5 class="text-center">{{ $product->name }}</h5>
-                  <strong>
-                    @if (Auth::guard('web')->check())
-                      <del class="fw-bold">MRP :- ₹ {{ $product->price - ($product->price * $product->discount / 100) }}</del>
-                      <p>₹ {{ $product->price_1 }}</p>
-                    @elseif (Auth::guard('customer')->check())
-                      <del class="fw-bold">MRP :- ₹ {{ $product->price - ($product->price * $product->discount / 100) }}</del>
-                      <p>Price :- ₹ {{ $product->rate_2 }}</p>
-                    @else
-                      <p>Price ₹{{ $product->price - ($product->price * $product->discount / 100) }}</p>
-                      <del>MRP :- ₹ {{ $product->price }}</del>
+    <div class="msv-slider-wrap reveal">
+      <button type="button" class="msv-slider-btn prev" onclick="msvSlide('trendingSlider',-1)" aria-label="Previous">
+        <i class="fa-solid fa-chevron-left"></i>
+      </button>
+      <div class="msv-slider" id="trendingSlider">
+        <div class="msv-slider-track">
+          @foreach($trendingproducts as $product)
+            @php
+                $mrp = (float) ($product->price ?? 0);
+                if (Auth::guard('customer')->check()) {
+                    $displayPrice = (float) ($product->rate_2 ?? $mrp);
+                } elseif (Auth::guard('web')->check()) {
+                    $displayPrice = (float) ($product->price_1 ?? $mrp);
+                } else {
+                    $displayPrice = (float) $product->sellingPrice();
+                }
+                if ($displayPrice <= 0) { $displayPrice = $mrp; }
+                $priceDiscount = 0;
+                if ($mrp > 0 && $displayPrice < $mrp) {
+                    $priceDiscount = round((($mrp - $displayPrice) / $mrp) * 100);
+                }
+                $isWishlisted = in_array($product->id, $wishlistProductIds ?? []);
+            @endphp
+            <div class="msv-slide">
+              <div class="card border-0 msv-product-card position-relative">
+                <span class="msv-wish {{ $isWishlisted ? 'active' : '' }}" onclick="toggleWishlist(event, {{ $product->id }})">
+                  <i class="fa-{{ $isWishlisted ? 'solid' : 'regular' }} fa-heart"></i>
+                </span>
+                <a href="/product-detail/{{ $product->id }}" class="decoration">
+                  <div class="msv-img-wrap">
+                    @if($product->tags->isNotEmpty())
+                      @foreach($product->tags as $tag)
+                        <span class="msv-tag">{{ $tag->name }}</span>
+                      @endforeach
                     @endif
-                  </strong>
-                  <button type="submit" class="btn text-white w-100 py-2 primary-bg mt-4">Add to Cart</button>
+                    <img src="{{ $product->photo->first()?->getUrl() }}" alt="{{ $product->name }}">
+                  </div>
+                  <div class="msv-card-body">
+                    <h5 class="msv-product-name">{{ $product->name }}</h5>
+                    @if($product->item_code)
+                      <p class="msv-item-code mb-0">Item: <span>{{ $product->item_code }}</span></p>
+                    @endif
+                    <div class="msv-assured mb-1"><i class="fa-solid fa-shield-halved"></i> Assured</div>
+                    <div class="msv-price-row">
+                      <span class="cur">₹{{ number_format($displayPrice, 0) }}</span>
+                      <del class="mrp-price">₹{{ number_format($mrp, 0) }}</del>
+                      @if($priceDiscount > 0)<span class="off">{{ $priceDiscount }}% off</span>@endif
+                    </div>
+                  </div>
+                </a>
+                <div class="px-3 pb-3">
+                  <form action="{{ route('cart.add') }}" method="POST" class="msv-actions">
+                    @csrf
+                    <input type="hidden" name="id" value="{{ $product->id }}">
+                    <input type="hidden" name="name" value="{{ $product->name }}">
+                    <input type="hidden" name="price" value="{{ $product->price }}">
+                    <input type="hidden" name="discount" value="{{ $product->discount }}">
+                    <input type="hidden" name="price_1" value="{{ $product->price_1 }}">
+                    <input type="hidden" name="rate_2" value="{{ $product->rate_2 }}">
+                    <input type="hidden" name="quantity" value="{{ $product->quantity }}">
+                    <input type="hidden" name="description" value="{{ $product->description }}">
+                    <input type="hidden" name="photo" value="{{ $product->photo->first()?->getUrl() ?? 'default.png' }}">
+                    <button type="submit" class="msv-add-cart"><i class="fa-solid fa-cart-plus"></i> Add to Cart</button>
+                  </form>
                 </div>
               </div>
             </div>
-          </form>
-        </a>
+          @endforeach
+        </div>
       </div>
-      @endforeach
+      <button type="button" class="msv-slider-btn next" onclick="msvSlide('trendingSlider',1)" aria-label="Next">
+        <i class="fa-solid fa-chevron-right"></i>
+      </button>
     </div>
   </div>
 </section>
@@ -706,7 +845,7 @@
 </section>
 
 <!-- ============ SECTION 6: MORE TO EXPLORE ============ -->
-<section class="sb-rail sb-explore">
+<section class="sb-rail">
   <div class="container">
     <div class="sb-rail-head reveal">
       <h2>More to Explore</h2>
@@ -714,33 +853,66 @@
     </div>
     <div class="row g-3">
       @foreach($exploreproducts as $product)
-      <div class="col-6 col-lg-3 mb-3 reveal">
-        <a href="/product-detail/{{ $product->id }}" class="decoration">
-          <div class="card">
-            <button class="position-absolute top-0 end-0 btn me-3 mt-3">
-              <i class="fa-regular fa-heart"></i>
-            </button>
-            <div class="text-center">
-              <img src="{{ $product->photo->first()?->getUrl() }}" alt="{{ $product->name }}" style="width: 100%; height:220px; object-fit:cover;">
-            </div>
-            <div class="text-center p-3">
-              <h5 class="text-center">{{ $product->name }}</h5>
-              <strong>
-                @if (Auth::guard('web')->check())
-                  <del class="fw-bold">MRP :- ₹ {{ $product->price - ($product->price * $product->discount / 100) }}</del>
-                  <p>₹ {{ $product->price_1 }}</p>
-                @elseif (Auth::guard('customer')->check())
-                  <del class="fw-bold">MRP :- ₹ {{ $product->price - ($product->price * $product->discount / 100) }}</del>
-                  <p>Price :- ₹ {{ $product->rate_2 }}</p>
-                @else
-                  <p>Price ₹{{ $product->price - ($product->price * $product->discount / 100) }}</p>
-                  <del>MRP :- ₹ {{ $product->price }}</del>
+        @php
+            $mrp = (float) ($product->price ?? 0);
+            if (Auth::guard('customer')->check()) {
+                $displayPrice = (float) ($product->rate_2 ?? $mrp);
+            } elseif (Auth::guard('web')->check()) {
+                $displayPrice = (float) ($product->price_1 ?? $mrp);
+            } else {
+                $displayPrice = (float) $product->sellingPrice();
+            }
+            if ($displayPrice <= 0) { $displayPrice = $mrp; }
+            $priceDiscount = 0;
+            if ($mrp > 0 && $displayPrice < $mrp) {
+                $priceDiscount = round((($mrp - $displayPrice) / $mrp) * 100);
+            }
+            $isWishlisted = in_array($product->id, $wishlistProductIds ?? []);
+        @endphp
+        <div class="col-6 col-lg-3 mb-3 reveal">
+          <div class="card border-0 msv-product-card position-relative">
+            <span class="msv-wish {{ $isWishlisted ? 'active' : '' }}" onclick="toggleWishlist(event, {{ $product->id }})">
+              <i class="fa-{{ $isWishlisted ? 'solid' : 'regular' }} fa-heart"></i>
+            </span>
+            <a href="/product-detail/{{ $product->id }}" class="decoration">
+              <div class="msv-img-wrap">
+                @if($product->tags->isNotEmpty())
+                  @foreach($product->tags as $tag)
+                    <span class="msv-tag">{{ $tag->name }}</span>
+                  @endforeach
                 @endif
-              </strong>
+                <img src="{{ $product->photo->first()?->getUrl() }}" alt="{{ $product->name }}">
+              </div>
+              <div class="msv-card-body">
+                <h5 class="msv-product-name">{{ $product->name }}</h5>
+                @if($product->item_code)
+                  <p class="msv-item-code mb-0">Item: <span>{{ $product->item_code }}</span></p>
+                @endif
+                <div class="msv-assured mb-1"><i class="fa-solid fa-shield-halved"></i> Assured</div>
+                <div class="msv-price-row">
+                  <span class="cur">₹{{ number_format($displayPrice, 0) }}</span>
+                  <del class="mrp-price">₹{{ number_format($mrp, 0) }}</del>
+                  @if($priceDiscount > 0)<span class="off">{{ $priceDiscount }}% off</span>@endif
+                </div>
+              </div>
+            </a>
+            <div class="px-3 pb-3">
+              <form action="{{ route('cart.add') }}" method="POST" class="msv-actions">
+                @csrf
+                <input type="hidden" name="id" value="{{ $product->id }}">
+                <input type="hidden" name="name" value="{{ $product->name }}">
+                <input type="hidden" name="price" value="{{ $product->price }}">
+                <input type="hidden" name="discount" value="{{ $product->discount }}">
+                <input type="hidden" name="price_1" value="{{ $product->price_1 }}">
+                <input type="hidden" name="rate_2" value="{{ $product->rate_2 }}">
+                <input type="hidden" name="quantity" value="{{ $product->quantity }}">
+                <input type="hidden" name="description" value="{{ $product->description }}">
+                <input type="hidden" name="photo" value="{{ $product->photo->first()?->getUrl() ?? 'default.png' }}">
+                <button type="submit" class="msv-add-cart"><i class="fa-solid fa-cart-plus"></i> Add to Cart</button>
+              </form>
             </div>
           </div>
-        </a>
-      </div>
+        </div>
       @endforeach
     </div>
   </div>
@@ -792,6 +964,119 @@ document.addEventListener('DOMContentLoaded', function () {
         statEls.forEach(function (el) { statIO.observe(el); });
     }
 });
+
+// ---------------------------------------------------------------
+// Product slider (Trending Products) — auto-advances one card at a
+// time, pauses on hover, and supports the prev/next arrow buttons.
+// ---------------------------------------------------------------
+const msvSliders = {};
+
+function msvItemsPerView() {
+    const w = window.innerWidth;
+    if (w <= 575.98) return 1;
+    if (w <= 991.98) return 2;
+    return 4;
+}
+
+function msvInitSlider(id) {
+    const wrap = document.getElementById(id);
+    if (!wrap) return;
+    const track = wrap.querySelector('.msv-slider-track');
+    const slides = track.querySelectorAll('.msv-slide');
+    const total = slides.length;
+    if (!total) return;
+
+    const state = { index: 0, track, wrap, total, timer: null };
+    msvSliders[id] = state;
+
+    function maxIndex() {
+        return Math.max(total - msvItemsPerView(), 0);
+    }
+
+    function update() {
+        const slideWidth = wrap.clientWidth / msvItemsPerView();
+        track.style.transform = `translateX(-${state.index * slideWidth}px)`;
+    }
+    state.update = update;
+
+    function autoNext() {
+        const mi = maxIndex();
+        state.index = state.index >= mi ? 0 : state.index + 1;
+        update();
+    }
+
+    function play() {
+        if (maxIndex() <= 0) return; // nothing to slide
+        state.timer = setInterval(autoNext, 3000);
+    }
+    function pause() { clearInterval(state.timer); }
+
+    window.addEventListener('resize', function () {
+        state.index = Math.min(state.index, maxIndex());
+        update();
+    });
+
+    wrap.addEventListener('mouseenter', pause);
+    wrap.addEventListener('mouseleave', play);
+
+    update();
+    play();
+}
+
+function msvSlide(id, dir) {
+    const state = msvSliders[id];
+    if (!state) return;
+    const mi = Math.max(state.total - msvItemsPerView(), 0);
+    state.index = Math.min(Math.max(state.index + dir, 0), mi);
+    state.update();
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    msvInitSlider('trendingSlider');
+});
+
+// Wishlist toggle — used by the "New Launches", "Trending Products" and
+// "More to Explore" product cards above. Uses event.currentTarget instead
+// of an element id, so it works correctly even if the same product card
+// appears more than once on this page.
+function toggleWishlist(event, productId) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const wrapper = event.currentTarget;
+    const icon = wrapper.querySelector('i');
+    const url = "{{ url('/add-to-wishlist') }}/" + productId;
+
+    fetch(url, {
+        method: "POST",
+        headers: {
+            "X-CSRF-TOKEN": "{{ csrf_token() }}",
+            "Accept": "application/json"
+        }
+    })
+    .then(res => {
+        if (res.status === 401) {
+            alert("Please login to add items to your wishlist.");
+            return null;
+        }
+        return res.json();
+    })
+    .then(data => {
+        if (!data) return;
+        if (data.status === 'added') {
+            wrapper.classList.add('active');
+            icon.classList.remove('fa-regular');
+            icon.classList.add('fa-solid');
+        } else if (data.status === 'removed') {
+            wrapper.classList.remove('active');
+            icon.classList.remove('fa-solid');
+            icon.classList.add('fa-regular');
+        } else if (data.error) {
+            alert(data.error);
+        }
+    })
+    .catch(err => console.error('Wishlist error:', err));
+}
 </script>
 
 @endsection

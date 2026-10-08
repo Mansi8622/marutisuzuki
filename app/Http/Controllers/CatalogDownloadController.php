@@ -100,7 +100,7 @@ class CatalogDownloadController extends Controller
             'email'   => 'support@marutisuzukiventures.online',
             'website' => config('app.url'),
             'address' => 'Patna, Bengaluru, Pune, Punjab',
-            'logo'    => public_path('asset/img/msv-logo.png'),
+            'logo'    => public_path('asset/img/logo.webp'),
         ];
     }
 }

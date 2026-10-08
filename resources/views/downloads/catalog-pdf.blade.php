@@ -191,7 +191,7 @@
 
     <div class="abs" style="top:60pt;left:{{ ($W - 130) / 2 }}pt;width:130pt;height:130pt;border-radius:65pt;background:#ffffff;text-align:center;">
         <img src="{{ $meta['logo'] }}" style="width:84pt;max-height:84pt;margin-top:23pt;">
-    </div>
+    </div> 
 
     <div class="abs center white" style="top:222pt;left:0;width:595pt;">
         <div style="font-size:10pt;letter-spacing:6pt;color:#cfeaf7;">{{ $year }} EDITION</div>

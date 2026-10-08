@@ -2,11 +2,6 @@
 
 @section('content')
 
-
-
-
-
-
 <section class="login">
 
     <div class="container">
@@ -44,7 +39,5 @@
                 </div>
 
 </section>
-
-
 
 @endsection
